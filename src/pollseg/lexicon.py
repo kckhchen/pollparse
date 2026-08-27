@@ -1,5 +1,7 @@
 import re
 
+from .numerals import to_int
+
 Entry = tuple[str, dict]
 
 MULTI: list[Entry] = [
@@ -75,19 +77,6 @@ HOST: list[Entry] = [
 
 TABLES: dict[str, list[Entry]] = {"MULTI": MULTI, "ANON": ANON, "HOST": HOST}
 
-_CN_NUM = {
-    "一": 1,
-    "兩": 2,
-    "二": 2,
-    "三": 3,
-    "四": 4,
-    "五": 5,
-    "六": 6,
-    "七": 7,
-    "八": 8,
-    "九": 9,
-    "十": 10,
-}
 _NUM = r"(\d+|[一兩二三四五六七八九十]+)"
 _LIMIT_RE = re.compile(
     "|".join(
@@ -108,15 +97,7 @@ def lookup(text, label):
         match = _LIMIT_RE.fullmatch(text)
         if match:
             captured = next(group for group in match.groups() if group)
-            limit = _to_int(captured)
+            limit = to_int(captured)
             if limit:
                 return {"multichoice": limit > 1, "max_choices": limit}
-    return None
-
-
-def _to_int(numeral):
-    if numeral.isdigit():
-        return int(numeral)
-    if numeral in _CN_NUM:
-        return _CN_NUM[numeral]
     return None
