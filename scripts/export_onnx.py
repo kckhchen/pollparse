@@ -89,14 +89,16 @@ def verify(model_dir: Path, onnx_path: Path, tolerance: float) -> dict:
     for text in texts:
         encoded = tokenizer(text, return_tensors="pt")
         with torch.no_grad():
-            torch_logits = torch_model(**encoded).logits.numpy()
-        onnx_logits = session.run(
-            None,
-            {
-                "input_ids": encoded["input_ids"].numpy(),
-                "attention_mask": encoded["attention_mask"].numpy(),
-            },
-        )[0]
+            torch_logits: np.ndarray = torch_model(**encoded).logits.numpy()
+        onnx_logits = np.asarray(
+            session.run(
+                None,
+                {
+                    "input_ids": encoded["input_ids"].numpy(),
+                    "attention_mask": encoded["attention_mask"].numpy(),
+                },
+            )[0]
+        )
         worst_diff = max(worst_diff, float(np.abs(torch_logits - onnx_logits).max()))
         label_mismatch += int((torch_logits.argmax(-1) != onnx_logits.argmax(-1)).sum())
     return {
