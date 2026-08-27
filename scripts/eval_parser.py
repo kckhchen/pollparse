@@ -1,5 +1,4 @@
 import argparse
-import json
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -7,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from pollseg.baseline.parser import parse
+from pollseg.baseline.parser import parse as parse_with_rules
 from pollseg.dataset_io import read_jsonl
 
 OUT = ROOT / "dist"
@@ -28,7 +27,7 @@ def _settings_match(gold: dict, predicted: dict, skip: set[str]) -> bool:
     )
 
 
-def evaluate(examples: list[dict]) -> dict:
+def evaluate(examples: list[dict], parse) -> dict:
     hits = Counter()
     gold_totals = Counter()
     predicted_totals = Counter()
@@ -122,7 +121,30 @@ def main():
     parser.add_argument(
         "--splits", nargs="*", default=["dev_iid", "dev_oov", "eval_real"]
     )
+    which = parser.add_mutually_exclusive_group()
+    which.add_argument(
+        "--baseline", action="store_true", help="Evaluate the rule baseline"
+    )
+    which.add_argument(
+        "--model",
+        default=str(ROOT / "dist" / "tagger"),
+        help="Model directory (default: dist/tagger)",
+    )
     args = parser.parse_args()
+
+    if args.baseline:
+        parse = parse_with_rules
+        print("parser: rule baseline")
+    else:
+        if not Path(args.model).exists():
+            sys.exit(
+                f"{args.model} not found — train one with scripts/train_model.py, "
+                "or pass --baseline to evaluate the rules"
+            )
+        from pollseg.model.predict import Tagger
+
+        parse = Tagger(args.model).parse
+        print(f"parser: model at {args.model}")
 
     for split in args.splits:
         path = OUT / f"{split}.jsonl"
@@ -130,7 +152,7 @@ def main():
             print(f"（skipped {split}：{path} does not exist）")
             continue
         examples = read_jsonl(path)
-        _print_report(split, evaluate(examples), args.slice)
+        _print_report(split, evaluate(examples, parse), args.slice)
 
 
 if __name__ == "__main__":
