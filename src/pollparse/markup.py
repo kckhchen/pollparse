@@ -1,4 +1,5 @@
 import re
+from itertools import pairwise
 
 from . import lexicon
 from .schema import encode_bio
@@ -52,7 +53,7 @@ def _parse(line, id=0):
             "domain": "real",
             "n_options": sum(1 for span in spans if span["label"] == "OPT"),
             "unresolved": unresolved,
-            "hard": [],
+            "hard": _detect_hard_flags(text, spans),
         },
     }
 
@@ -84,6 +85,18 @@ def _strip_markup(line):
 
     text_fragments.append(line[line_position:])
     return "".join(text_fragments), spans
+
+
+_EXPLICIT_DELIMITERS = "、／/"
+
+
+def _detect_hard_flags(text: str, spans: list[dict]) -> list[str]:
+    options = [span for span in spans if span["label"] == "OPT"]
+    for previous, following in pairwise(options):
+        separator = text[previous["end"] : following["start"]]
+        if any(char in _EXPLICIT_DELIMITERS for char in separator):
+            return ["explicit_sep"]
+    return []
 
 
 def _resolve_settings(spans):
