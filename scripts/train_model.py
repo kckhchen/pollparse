@@ -63,8 +63,20 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=5e-5)
-    parser.add_argument("--out", default=str(ROOT / "dist" / "tagger"))
+    parser.add_argument("--out", default=None)
     args = parser.parse_args()
+
+    if args.out:
+        out_dir = Path(args.out)
+    else:
+        model_slug = args.model.replace("/", "-")
+        out_dir = DIST / (
+            f"tagger-{model_slug}-e{args.epochs}-b{args.batch_size}-lr{args.lr:g}"
+        )
+    if out_dir.exists():
+        sys.exit(f"{out_dir} already exists — remove it or pass --out")
+    out_dir.mkdir(parents=True)
+    print(f"will save to {out_dir}")
 
     device = _pick_device()
     tokenizer = build_tokenizer(args.model)
@@ -127,10 +139,9 @@ def main() -> None:
             f"  ({time.time() - started:.0f}s)"
         )
 
-    Path(args.out).mkdir(parents=True, exist_ok=True)
-    model.save_pretrained(args.out)
-    tokenizer.save_pretrained(args.out)
-    print(f"Model saved to {args.out}")
+    model.save_pretrained(out_dir)
+    tokenizer.save_pretrained(out_dir)
+    print(f"Model saved to {out_dir}")
 
 
 if __name__ == "__main__":
