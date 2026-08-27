@@ -21,10 +21,8 @@ _CLOCK = (
     rf"(?:(?P<day>{_DAY}))?(?:(?P<part>{_PART}))?"
     rf"(?P<hour>{_NUM})點(?P<minute>半|整|(?:{_NUM})分)?"
 )
-_CLOCK_NO_DAY = (
-    rf"(?:(?P<part>{_PART}))?"
-    rf"(?P<hour>{_NUM})點(?P<minute>半|整|(?:{_NUM})分)?"
-)
+_CLOCK_CORE = rf"(?P<hour>{_NUM})點(?P<minute>半|整|(?:{_NUM})分)?"
+_CLOCK_NO_DAY = rf"(?:(?P<part>{_PART}))?(?:{_CLOCK_CORE})?"
 
 _MONTH = r"1[0-2]|0?[1-9]"
 _DAY_NUM = r"3[01]|[12]\d|0?[1-9]"
@@ -96,6 +94,23 @@ def _handle_absolute(groups: _Groups) -> dict | None:
     }
 
 
+def _handle_no_clock(groups: _Groups) -> dict | None:
+    day_word, part = groups.get("day"), groups.get("part")
+    if day_word is None and part is None:
+        return None
+    deadline = {
+        "kind": "absolute",
+        "day_offset": time_lexicon.DAY_OFFSET[day_word] if day_word else None,
+        "hour": None,
+        "minute": None,
+        "meridiem": None,
+        "hour_is_24h": False,
+    }
+    if part is not None:
+        deadline["part"] = part
+    return deadline
+
+
 def _handle_clock24(groups: _Groups) -> dict | None:
     hour_text, minute_text = groups.get("h24"), groups.get("m24")
     if hour_text is None or minute_text is None:
@@ -112,6 +127,19 @@ def _handle_clock24(groups: _Groups) -> dict | None:
         "meridiem": None,
         "hour_is_24h": True,
     }
+
+
+def _apply_clock_or_part(deadline: dict, groups: _Groups) -> bool:
+    if groups.get("hour"):
+        clock = _read_clock(groups)
+        if clock is None:
+            return False
+        deadline.update(clock)
+        return True
+    part = groups.get("part")
+    if part is not None:
+        deadline["part"] = part
+    return True
 
 
 def _handle_date(groups: _Groups) -> dict | None:
@@ -132,12 +160,7 @@ def _handle_date(groups: _Groups) -> dict | None:
         "meridiem": None,
         "hour_is_24h": False,
     }
-    if groups.get("hour"):
-        clock = _read_clock(groups)
-        if clock is None:
-            return None
-        deadline.update(clock)
-    return deadline
+    return deadline if _apply_clock_or_part(deadline, groups) else None
 
 
 def _handle_weekday(groups: _Groups) -> dict | None:
@@ -156,12 +179,7 @@ def _handle_weekday(groups: _Groups) -> dict | None:
         "meridiem": None,
         "hour_is_24h": False,
     }
-    if groups.get("hour"):
-        clock = _read_clock(groups)
-        if clock is None:
-            return None
-        deadline.update(clock)
-    return deadline
+    return deadline if _apply_clock_or_part(deadline, groups) else None
 
 
 _PATTERNS = [
@@ -179,6 +197,11 @@ _PATTERNS = [
         ),
         _handle_clock24,
     ),
+    (
+        rf"(?P<day>{_DAY})(?:(?P<part>{_PART}))?(?:{_END}|{_BEFORE}(?:{_END})?)",
+        _handle_no_clock,
+    ),
+    (rf"(?P<part>{_PART})(?:{_END}|{_BEFORE}(?:{_END})?)", _handle_no_clock),
     (rf"{_CLOCK}(?:{_END})", _handle_absolute),
     (rf"{_CLOCK}(?:{_BEFORE})(?:{_END})?", _handle_absolute),
     (rf"(?:{_LEAD}){_CLOCK}", _handle_absolute),

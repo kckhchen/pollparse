@@ -5,4 +5,5 @@ __all__ = ["alternation"]
 
 
 def alternation(words: Iterable[str]) -> str:
-    return "|".join(re.escape(word) for word in sorted(words, key=len, reverse=True))
+    ordered = sorted(words, key=len, reverse=True)
+    return "(?:" + "|".join(re.escape(word) for word in ordered) + ")"

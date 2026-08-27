@@ -1,5 +1,7 @@
 from datetime import date, datetime, time, timedelta
 
+from . import time_lexicon
+
 __all__ = [
     "WARNING_DEADLINE_FAR_FUTURE",
     "WARNING_DEADLINE_IN_PAST",
@@ -13,6 +15,13 @@ WARNING_INVALID_DATE = "invalid_date"
 
 _SUSPICIOUS_SPAN = timedelta(days=30)
 _END_OF_DAY = time(23, 59, 59)
+
+
+def _moments(deadline: dict) -> list[time]:
+    if deadline["hour"] is None:
+        end_of_part = time_lexicon.PART_END.get(deadline.get("part"))
+        return [time(*end_of_part)] if end_of_part else [_END_OF_DAY]
+    return _hour_options(deadline)
 
 
 def _hour_options(deadline: dict) -> list[time]:
@@ -40,10 +49,10 @@ def _earliest_future(
     return future[0] if future else None
 
 
-def _resolve_absolute(deadline: dict, now: datetime, warnings: list[str]) -> datetime:
-    moments = _hour_options(deadline)
-    day_offset = deadline["day_offset"]
-
+def _relative_to_today(
+    moments: list[time], day_offset: int | None, now: datetime, warnings: list[str]
+) -> datetime:
+    """把「今天／明天／沒講哪天」加上一組候選時刻，解成最早的未來時間。"""
     if day_offset is None:
         resolved = _earliest_future(
             [now.date(), now.date() + timedelta(days=1)], moments, now
@@ -62,8 +71,12 @@ def _resolve_absolute(deadline: dict, now: datetime, warnings: list[str]) -> dat
     return resolved
 
 
+def _resolve_absolute(deadline: dict, now: datetime, warnings: list[str]) -> datetime:
+    return _relative_to_today(_moments(deadline), deadline["day_offset"], now, warnings)
+
+
 def _resolve_date(deadline: dict, now: datetime, warnings: list[str]) -> datetime:
-    moments = _hour_options(deadline) if deadline["hour"] is not None else [_END_OF_DAY]
+    moments = _moments(deadline)
     years = [deadline["year"]] if deadline["year"] else [now.year, now.year + 1]
     days = []
     for year in years:
@@ -82,7 +95,7 @@ def _resolve_date(deadline: dict, now: datetime, warnings: list[str]) -> datetim
 
 
 def _resolve_weekday(deadline: dict, now: datetime, warnings: list[str]) -> datetime:
-    moments = _hour_options(deadline) if deadline["hour"] is not None else [_END_OF_DAY]
+    moments = _moments(deadline)
     this_week = now.date() + timedelta(days=deadline["weekday"] - now.isoweekday())
     week_offset = deadline["week_offset"]
 

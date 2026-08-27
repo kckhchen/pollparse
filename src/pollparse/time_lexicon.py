@@ -6,6 +6,7 @@ __all__ = [
     "END_MARKERS",
     "LEAD_VERBS",
     "MERIDIEM_OF",
+    "PART_END",
     "PART_KIND",
     "PART_WORDS",
     "WEEKDAY_CHARS",
@@ -32,6 +33,7 @@ PART_WORDS: list[tuple[str, str]] = [
     ("晚間", "pm"),
     ("凌晨", "dawn"),
     ("半夜", "dawn"),
+    ("午夜", "dawn"),
 ]
 PART_KIND: dict[str, str] = dict(PART_WORDS)
 
@@ -41,6 +43,19 @@ MERIDIEM_OF: dict[str, str] = {
     "pm": "pm",
     "dusk": "pm",
     "dawn": "am",
+}
+
+PART_END: dict[str, tuple[int, int, int]] = {
+    "早上": (12, 0, 0),
+    "上午": (12, 0, 0),
+    "中午": (12, 0, 0),
+    "下午": (18, 0, 0),
+    "傍晚": (19, 0, 0),
+    "晚上": (23, 59, 59),
+    "晚間": (23, 59, 59),
+    "凌晨": (23, 59, 59),
+    "半夜": (23, 59, 59),
+    "午夜": (23, 59, 59),
 }
 
 END_MARKERS = ["截止", "收單", "結束", "關閉", "到期", "停止投票", "截止投票"]
@@ -76,7 +91,10 @@ def to_24_hour(hour: int, part_kind: str | None) -> int:
         return hour + 12
     if part_kind == "noon":
         return 12
-    if part_kind == "am" and hour == 12:
+    # 「午夜十二點」「半夜十二點」的十二點是 0:00 不是中午。這裡要看
+    # meridiem 而不是 part_kind —— dawn 的 meridiem 也是 am，只比對
+    # part_kind == "am" 會漏掉它，把午夜解成中午。
+    if MERIDIEM_OF.get(part_kind) == "am" and hour == 12:
         return 0
     return hour % 24
 
