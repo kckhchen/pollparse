@@ -64,6 +64,12 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--out", default=None)
+    parser.add_argument(
+        "--device",
+        default=None,
+        choices=["cpu", "mps", "cuda"],
+        help="Auto detect if not specified.",
+    )
     args = parser.parse_args()
 
     if args.out:
@@ -78,7 +84,7 @@ def main() -> None:
     out_dir.mkdir(parents=True)
     print(f"will save to {out_dir}")
 
-    device = _pick_device()
+    device = args.device or _pick_device()
     tokenizer = build_tokenizer(args.model)
     model = AutoModelForTokenClassification.from_pretrained(
         args.model,
