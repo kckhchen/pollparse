@@ -5,9 +5,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from pollseg import markup
-from pollseg.dataset_io import write_jsonl
-from pollseg.validate import check_all, coverage_report
+from pollparse import markup
+from pollparse.dataset_io import write_jsonl
+from pollparse.validate import check_all, coverage_report
 
 
 def main():

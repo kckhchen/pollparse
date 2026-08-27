@@ -6,8 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from pollseg.baseline.parser import parse as parse_with_rules
-from pollseg.dataset_io import read_jsonl
+from pollparse.baseline.parser import parse as parse_with_rules
+from pollparse.dataset_io import read_jsonl
 
 OUT = ROOT / "dist"
 SETTING_KEYS = ("deadline", "multichoice", "max_choices", "anonymous", "host_can_vote")
@@ -137,7 +137,7 @@ def main():
                 f"{args.model} not found — train one with scripts/train_model.py, "
                 "or pass --baseline to evaluate the rules"
             )
-        from pollseg.model.predict import Tagger
+        from pollparse.model.predict import Tagger
 
         parse = Tagger(args.model).parse
         print(f"parser: model at {args.model}")

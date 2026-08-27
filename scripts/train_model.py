@@ -13,9 +13,9 @@ from transformers import (
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from pollseg.model.dataset import TaggingDataset, collate
-from pollseg.model.encoding import IGNORE_LABEL, build_tokenizer
-from pollseg.schema import ID2TAG, TAGS, decode_bio
+from pollparse.model.dataset import TaggingDataset, collate
+from pollparse.model.encoding import IGNORE_LABEL, build_tokenizer
+from pollparse.schema import ID2TAG, TAGS, decode_bio
 
 DIST = ROOT / "dist"
 

@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from pollseg.dataset_io import read_jsonl
+from pollparse.dataset_io import read_jsonl
 
 LABEL_COLOR = {
     "TITLE": "\033[95m",
