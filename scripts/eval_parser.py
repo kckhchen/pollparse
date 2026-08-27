@@ -121,15 +121,11 @@ def main():
     parser.add_argument(
         "--splits", nargs="*", default=["dev_iid", "dev_oov", "eval_real"]
     )
-    which = parser.add_mutually_exclusive_group()
+    which = parser.add_mutually_exclusive_group(required=True)
     which.add_argument(
         "--baseline", action="store_true", help="Evaluate the rule baseline"
     )
-    which.add_argument(
-        "--model",
-        default=str(ROOT / "dist" / "tagger"),
-        help="Model directory (default: dist/tagger)",
-    )
+    which.add_argument("--model", help="Directory of a trained tagger")
     args = parser.parse_args()
 
     if args.baseline:
