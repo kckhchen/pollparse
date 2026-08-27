@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from pollseg.baseline.parser import parse
+from pollseg.dataset_io import read_jsonl
 
 OUT = ROOT / "dist"
 SETTING_KEYS = ("deadline", "multichoice", "max_choices", "anonymous", "host_can_vote")
@@ -128,8 +129,7 @@ def main():
         if not path.exists():
             print(f"（skipped {split}：{path} does not exist）")
             continue
-        with open(path, encoding="utf-8") as handle:
-            examples = [json.loads(line) for line in handle]
+        examples = read_jsonl(path)
         _print_report(split, evaluate(examples), args.slice)
 
 

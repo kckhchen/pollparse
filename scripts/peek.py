@@ -1,7 +1,12 @@
 import argparse
-import json
 import random
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from pollseg.dataset_io import read_jsonl
 
 LABEL_COLOR = {
     "TITLE": "\033[95m",
@@ -37,8 +42,7 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
 
-    with open(args.path, encoding="utf-8") as handle:
-        examples = [json.loads(line) for line in handle]
+    examples = read_jsonl(args.path)
     if args.hard:
         examples = [
             example for example in examples if args.hard in example["meta"]["hard"]
