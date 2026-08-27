@@ -1,10 +1,11 @@
 import unicodedata
 
+from .. import lexicon
 from ..schema import encode_bio
 from . import settingscan, timeparse
 from .normalize import normalize
 
-__all__ = ["parse"]
+__all__ = ["build_result", "parse", "spans_from_rules"]
 
 _TITLE_MARKERS = "?!:"
 _OPTION_DELIMITERS = "、,，/／;|．\n"
@@ -13,14 +14,13 @@ _TRIM_CATEGORIES = {"So", "Ps", "Pe", "Cc", "Zs"}
 _SETTING_KEYS = ("deadline", "multichoice", "max_choices", "anonymous", "host_can_vote")
 
 
-def parse(text: str) -> dict:
+def spans_from_rules(text: str) -> list[tuple[int, int, str]]:
     normalized = normalize(text)
 
     candidates = timeparse.find_candidates(normalized) + settingscan.find_candidates(
         normalized
     )
     settings_spans = _select(candidates)
-
     title_range = _split_title(normalized, settings_spans)
 
     taken = [(span["start"], span["end"]) for span in settings_spans]
@@ -29,47 +29,51 @@ def parse(text: str) -> dict:
         taken.append((title_range[1], title_range[1] + 1))
     option_ranges = _split_options(normalized, _free_ranges(len(normalized), taken))
 
-    spans = []
+    spans: list[tuple[int, int, str]] = []
     if title_range:
-        spans.append(
-            {
-                "start": title_range[0],
-                "end": title_range[1],
-                "label": "TITLE",
-                "text": text[title_range[0] : title_range[1]],
-            }
-        )
-    for start, end in option_ranges:
-        spans.append(
-            {"start": start, "end": end, "label": "OPT", "text": text[start:end]}
-        )
-    for span in settings_spans:
-        spans.append(
-            {
-                "start": span["start"],
-                "end": span["end"],
-                "label": span["label"],
-                "text": text[span["start"] : span["end"]],
-            }
-        )
-    spans.sort(key=lambda span: span["start"])
+        spans.append((title_range[0], title_range[1], "TITLE"))
+    spans.extend((start, end, "OPT") for start, end in option_ranges)
+    spans.extend((span["start"], span["end"], span["label"]) for span in settings_spans)
+    return sorted(spans)
 
-    merged: dict = {}
-    for span in settings_spans:
-        merged.update(span["value"])
+
+def build_result(text: str, spans: list[tuple[int, int, str]]) -> dict:
+    normalized = normalize(text)
+
+    settings: dict = {}
+    for span_start, span_end, label in spans:
+        if label in ("TITLE", "OPT"):
+            continue
+        surface = normalized[span_start:span_end]
+        if label == "TIME":
+            deadline = timeparse.parse_one(surface)
+            if deadline is not None:
+                settings["deadline"] = deadline
+        else:
+            value = lexicon.lookup(surface, label)
+            if value is not None:
+                settings.update(value)
 
     return {
         "text": text,
-        "tags": encode_bio(
-            len(text), [(span["start"], span["end"], span["label"]) for span in spans]
-        ),
-        "spans": spans,
+        "tags": encode_bio(len(text), spans),
+        "spans": [
+            {"start": s, "end": e, "label": label, "text": text[s:e]}
+            for s, e, label in spans
+        ],
         "target": {
-            "title": text[title_range[0] : title_range[1]] if title_range else None,
-            "options": [text[start:end] for start, end in option_ranges],
-            "settings": {key: merged.get(key) for key in _SETTING_KEYS},
+            "title": next(
+                (text[s:e] for s, e, label in spans if label == "TITLE"), None
+            ),
+            "options": [text[s:e] for s, e, label in spans if label == "OPT"],
+            "settings": {key: settings.get(key) for key in _SETTING_KEYS},
         },
     }
+
+
+def parse(text: str) -> dict:
+    spans = spans_from_rules(text)
+    return build_result(text, spans)
 
 
 def _select(candidates: list[dict]) -> list[dict]:
