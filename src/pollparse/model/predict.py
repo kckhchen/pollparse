@@ -15,7 +15,8 @@ class Tagger:
         model_dir = Path(model_dir)
         self.tokenizer = build_tokenizer(str(model_dir))
         self.model = AutoModelForTokenClassification.from_pretrained(model_dir)
-        self.device = device or ("mps" if torch.backends.mps.is_available() else "cpu")
+        # not using mps in inference due to overhead
+        self.device = device or "cpu"
         self.model.to(self.device).eval()
 
     @torch.no_grad()
