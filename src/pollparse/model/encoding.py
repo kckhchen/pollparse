@@ -1,6 +1,9 @@
-from transformers import AutoTokenizer, PreTrainedTokenizerFast
+from typing import TYPE_CHECKING
 
 from ..schema import ID2TAG, TAG2ID
+
+if TYPE_CHECKING:  # transformers only need during training
+    from transformers import PreTrainedTokenizerFast
 
 __all__ = ["SENTINELS", "build_tokenizer", "decode_tags", "encode", "to_model_text"]
 
@@ -18,7 +21,9 @@ def to_model_text(text: str) -> str:
     return converted
 
 
-def build_tokenizer(model_name: str) -> PreTrainedTokenizerFast:
+def build_tokenizer(model_name: str) -> "PreTrainedTokenizerFast":
+    from transformers import AutoTokenizer
+
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.add_tokens(list(SENTINELS.values()))
     return tokenizer
