@@ -2,17 +2,18 @@ import re
 
 from .. import time_lexicon
 from ..numerals import to_int
+from ._regex import alternation
 
 __all__ = ["find_candidates", "parse_one"]
 
-_DAY = time_lexicon.alternation(time_lexicon.DAY_OFFSET)
-_PART = time_lexicon.alternation(time_lexicon.PART_KIND)
-_END = time_lexicon.alternation(time_lexicon.END_MARKERS)
-_BEFORE = time_lexicon.alternation(time_lexicon.BEFORE_MARKERS)
-_LEAD = time_lexicon.alternation(time_lexicon.LEAD_VERBS)
-_UNIT = time_lexicon.alternation(time_lexicon.SECONDS_PER_UNIT)
+_DAY = alternation(time_lexicon.DAY_OFFSET)
+_PART = alternation(time_lexicon.PART_KIND)
+_END = alternation(time_lexicon.END_MARKERS)
+_BEFORE = alternation(time_lexicon.BEFORE_MARKERS)
+_LEAD = alternation(time_lexicon.LEAD_VERBS)
+_UNIT = alternation(time_lexicon.SECONDS_PER_UNIT)
 _WEEKDAY = "".join(char for char, _ in time_lexicon.WEEKDAY_CHARS)
-_WEEK_PREFIX = time_lexicon.alternation(time_lexicon.WEEK_PREFIX)
+_WEEK_PREFIX = alternation(time_lexicon.WEEK_PREFIX)
 
 _NUM = r"\d{1,4}|[零一二兩三四五六七八九十百千]{1,5}"
 

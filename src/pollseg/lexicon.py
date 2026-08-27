@@ -78,12 +78,16 @@ HOST: list[Entry] = [
 TABLES: dict[str, list[Entry]] = {"MULTI": MULTI, "ANON": ANON, "HOST": HOST}
 
 _NUM = r"(\d+|[一兩二三四五六七八九十]+)"
-_LIMIT_RE = re.compile(
-    "|".join(
-        "(?:" + re.escape(template).replace(re.escape("{n}"), _NUM) + ")"
-        for template in MULTI_LIMIT_TEMPLATES
-    )
+
+LIMIT_PATTERN = "|".join(
+    "(?:" + re.escape(template).replace(re.escape("{n}"), _NUM) + ")"
+    for template in MULTI_LIMIT_TEMPLATES
 )
+_LIMIT_RE = re.compile(LIMIT_PATTERN)
+
+
+def surfaces(label: str) -> list[str]:
+    return [surface for surface, _ in TABLES[label]]
 
 
 def lookup(text, label):

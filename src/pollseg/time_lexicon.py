@@ -10,7 +10,6 @@ __all__ = [
     "PART_WORDS",
     "WEEKDAY_CHARS",
     "WEEK_PREFIX",
-    "alternation",
     "meridiem_of",
     "to_24_hour",
 ]
@@ -87,7 +86,3 @@ def meridiem_of(part_word: str | None) -> str | None:
         return None
     time_part = PART_KIND.get(part_word)
     return MERIDIEM_OF.get(time_part) if time_part else None
-
-
-def alternation(words) -> str:
-    return "|".join(sorted(words, key=len, reverse=True))
