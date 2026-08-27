@@ -15,7 +15,11 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from pollparse.model.dataset import TaggingDataset, collate
-from pollparse.model.encoding import IGNORE_LABEL, build_tokenizer
+from pollparse.model.encoding import (
+    DEFAULT_MAX_LENGTH,
+    IGNORE_LABEL,
+    build_tokenizer,
+)
 from pollparse.schema import ID2TAG, TAGS, decode_bio
 
 DIST = ROOT / "dist"
@@ -66,6 +70,12 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--out", default=None)
     parser.add_argument(
+        "--max-length",
+        type=int,
+        default=DEFAULT_MAX_LENGTH,
+        help="Max token length. Same length should be used during inference.",
+    )
+    parser.add_argument(
         "--seed",
         type=int,
         default=20260827,
@@ -84,7 +94,7 @@ def main() -> None:
         model_slug = args.model.replace("/", "-")
         out_dir = DIST / (
             f"tagger-{model_slug}-e{args.epochs}-b{args.batch_size}"
-            f"-lr{args.lr:g}-s{args.seed}"
+            f"-lr{args.lr:g}-len{args.max_length}-s{args.seed}"
         )
     if out_dir.exists():
         sys.exit(f"{out_dir} already exists — remove it or pass --out")
@@ -108,7 +118,7 @@ def main() -> None:
 
     def loader_for(split: str, shuffle: bool) -> DataLoader:
         return DataLoader(
-            TaggingDataset(DIST / f"{split}.jsonl", tokenizer),
+            TaggingDataset(DIST / f"{split}.jsonl", tokenizer, args.max_length),
             batch_size=args.batch_size,
             shuffle=shuffle,
             collate_fn=lambda batch: collate(batch, pad_token_id),

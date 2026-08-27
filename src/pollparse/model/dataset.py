@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerFast
 
 from ..dataset_io import read_jsonl
-from .encoding import IGNORE_LABEL, encode
+from .encoding import DEFAULT_MAX_LENGTH, IGNORE_LABEL, encode
 
 __all__ = ["TaggingDataset", "collate"]
 
@@ -15,7 +15,7 @@ class TaggingDataset(Dataset):
         self,
         path: Path,
         tokenizer: PreTrainedTokenizerFast,
-        max_length: int = 64,
+        max_length: int = DEFAULT_MAX_LENGTH,
     ) -> None:
         self.rows = read_jsonl(path)
         self.tokenizer = tokenizer

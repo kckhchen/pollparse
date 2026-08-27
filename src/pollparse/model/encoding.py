@@ -9,6 +9,8 @@ _TO_SENTINEL = str.maketrans(SENTINELS)
 
 IGNORE_LABEL = -100
 
+DEFAULT_MAX_LENGTH = 128
+
 
 def to_model_text(text: str) -> str:
     converted = text.translate(_TO_SENTINEL)
@@ -25,8 +27,8 @@ def build_tokenizer(model_name: str) -> PreTrainedTokenizerFast:
 def encode(
     text: str,
     tags: list[str] | None,
-    tokenizer: PreTrainedTokenizerFast,
-    max_length: int = 64,
+    tokenizer: "PreTrainedTokenizerFast",
+    max_length: int = DEFAULT_MAX_LENGTH,
 ) -> dict:
     encoded = tokenizer(
         to_model_text(text),
