@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from transformers import (
     AutoModelForTokenClassification,
     get_linear_schedule_with_warmup,
+    set_seed,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -65,6 +66,11 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--out", default=None)
     parser.add_argument(
+        "--seed",
+        type=int,
+        default=20260827,
+    )
+    parser.add_argument(
         "--device",
         default=None,
         choices=["cpu", "mps", "cuda"],
@@ -77,13 +83,15 @@ def main() -> None:
     else:
         model_slug = args.model.replace("/", "-")
         out_dir = DIST / (
-            f"tagger-{model_slug}-e{args.epochs}-b{args.batch_size}-lr{args.lr:g}"
+            f"tagger-{model_slug}-e{args.epochs}-b{args.batch_size}"
+            f"-lr{args.lr:g}-s{args.seed}"
         )
     if out_dir.exists():
         sys.exit(f"{out_dir} already exists — remove it or pass --out")
     out_dir.mkdir(parents=True)
     print(f"will save to {out_dir}")
 
+    set_seed(args.seed)
     device = args.device or _pick_device()
     tokenizer = build_tokenizer(args.model)
     model = AutoModelForTokenClassification.from_pretrained(
