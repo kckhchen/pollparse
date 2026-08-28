@@ -50,8 +50,6 @@ ANON: list[Entry] = [
     ("公開投票", {"anonymous": False}),
     ("實名制", {"anonymous": False}),
     ("顯示投票人", {"anonymous": False}),
-    ("看得到誰投的", {"anonymous": False}),
-    ("不會知道誰投的", {"anonymous": True}),
 ]
 
 HOST_ROLES = ["房主", "主揪", "發起人", "主持人", "開房的", "主辦", "開這個的人", "我"]
