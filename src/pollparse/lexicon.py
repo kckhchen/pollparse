@@ -151,7 +151,7 @@ TABLES: dict[str, list[Entry]] = {
     "ADDOPT": ADDOPT,
 }
 
-_NUM = r"(\d+|[一兩二三四五六七八九十]+)"
+_NUM = r"(\d{1,4}|[一兩二三四五六七八九十]+)"
 
 LIMIT_PATTERN = "|".join(
     "(?:" + re.escape(template).replace(re.escape("{n}"), _NUM) + ")"
