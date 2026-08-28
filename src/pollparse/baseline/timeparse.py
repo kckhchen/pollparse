@@ -57,10 +57,9 @@ def _read_clock(groups: _Groups) -> dict | None:
             return None
 
     part = groups.get("part")
-    part_kind = time_lexicon.PART_KIND.get(part) if part else None
     meridiem = time_lexicon.meridiem_of(part)
     return {
-        "hour": time_lexicon.to_24_hour(hour, part_kind) if meridiem else hour,
+        "hour": time_lexicon.to_24_hour(hour, part) if meridiem else hour,
         "minute": minute,
         "meridiem": meridiem,
         "hour_is_24h": meridiem is not None,

@@ -19,7 +19,8 @@ _END_OF_DAY = time(23, 59, 59)
 
 def _moments(deadline: dict) -> list[time]:
     if deadline["hour"] is None:
-        end_of_part = time_lexicon.PART_END.get(deadline.get("part"))
+        part = deadline.get("part")
+        end_of_part = time_lexicon.PART_END.get(part) if part else None
         return [time(*end_of_part)] if end_of_part else [_END_OF_DAY]
     return _hour_options(deadline)
 
