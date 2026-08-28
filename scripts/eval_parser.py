@@ -8,6 +8,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from pollparse.baseline.parser import parse as parse_with_rules
 from pollparse.dataset_io import read_jsonl
+from pollparse.model.encoding import DEFAULT_MAX_LENGTH
 from pollparse.schema import SETTING_KEYS
 
 OUT = ROOT / "dist"
@@ -126,6 +127,12 @@ def main():
         "--baseline", action="store_true", help="Evaluate the rule baseline"
     )
     which.add_argument("--model", help="Directory of a trained tagger")
+    parser.add_argument(
+        "--max-length",
+        type=int,
+        default=DEFAULT_MAX_LENGTH,
+        help="Must match the --max-length the model was trained with.",
+    )
     args = parser.parse_args()
 
     if args.baseline:
@@ -139,7 +146,7 @@ def main():
             )
         from pollparse.model.predict import Tagger
 
-        parse = Tagger(args.model).parse
+        parse = Tagger(args.model, max_length=args.max_length).parse
         print(f"parser: model at {args.model}")
 
     for split in args.splits:

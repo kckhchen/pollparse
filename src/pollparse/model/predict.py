@@ -5,13 +5,19 @@ from transformers import AutoModelForTokenClassification
 
 from ..baseline.parser import build_result
 from ..schema import decode_bio
-from .encoding import build_tokenizer, decode_tags, encode
+from .encoding import DEFAULT_MAX_LENGTH, build_tokenizer, decode_tags, encode
 
 __all__ = ["Tagger"]
 
 
 class Tagger:
-    def __init__(self, model_dir: str | Path, device: str | None = None) -> None:
+    def __init__(
+        self,
+        model_dir: str | Path,
+        device: str | None = None,
+        max_length: int = DEFAULT_MAX_LENGTH,
+    ) -> None:
+        self.max_length = max_length
         model_dir = Path(model_dir)
         self.tokenizer = build_tokenizer(str(model_dir))
         self.model = AutoModelForTokenClassification.from_pretrained(model_dir)
@@ -21,7 +27,7 @@ class Tagger:
 
     @torch.no_grad()
     def _predict(self, text: str) -> tuple[list[str], list[float]]:
-        encoded = encode(text, None, self.tokenizer)
+        encoded = encode(text, None, self.tokenizer, max_length=self.max_length)
         logits = self.model(
             input_ids=torch.tensor([encoded["input_ids"]]).to(self.device),
             attention_mask=torch.tensor([encoded["attention_mask"]]).to(self.device),
