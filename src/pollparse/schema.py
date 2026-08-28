@@ -44,6 +44,9 @@ class Span:
 
 
 def encode_bio(length, spans):
+    for _, _, label in spans:
+        if label not in SPAN_LABELS:
+            raise ValueError(f"unknown span label: {label!r}")
     # from span to BIO tags
     tags = ["O"] * length
     for start, end, label in spans:
