@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-SPAN_LABELS = ["TITLE", "OPT", "TIME", "MULTI", "ANON", "HOST", "LIVE"]
-SETTING_LABELS = ["TIME", "MULTI", "ANON", "HOST", "LIVE"]
+SPAN_LABELS = ["TITLE", "OPT", "TIME", "MULTI", "ANON", "HOST", "LIVE", "ADDOPT"]
+SETTING_LABELS = ["TIME", "MULTI", "ANON", "HOST", "LIVE", "ADDOPT"]
 
 # 靠詞庫查表就解得出語意的設定標籤。TIME 不在裡面 —— 它走 timeparse 的文法，
 # 不是查表。
@@ -17,6 +17,7 @@ SETTING_KEYS = (
     "anonymous",
     "host_can_vote",
     "live_results",
+    "allow_other",
 )
 
 TAGS = ["O"] + [f"{prefix}-{label}" for label in SPAN_LABELS for prefix in ("B", "I")]

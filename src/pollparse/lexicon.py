@@ -109,11 +109,46 @@ LIVE: list[Entry] = [
     ("先不要公布票數", {"live_results": False}),
 ]
 
+# 開放投票者自己新增選項。
+#
+# 這裡刻意**不收**「其他」「其它」「別的」這種光禿禿的名詞 —— 那些是選項，
+# 不是設定。「其他」是選票上的一個固定選擇（點了就是點了，不能打字），跟
+# 「開放大家自己新增」是兩個不同的功能，而且可以同時存在。真正表達這個設定
+# 的說法一定帶動詞：新增／加／填／自訂／補／允許／開放。
+ADDOPT: list[Entry] = [
+    ("可新增選項", {"allow_other": True}),
+    ("可以新增選項", {"allow_other": True}),
+    ("可以新增", {"allow_other": True}),
+    ("開放新增", {"allow_other": True}),
+    ("開放新增選項", {"allow_other": True}),
+    ("可以自己加", {"allow_other": True}),
+    ("可以自己填", {"allow_other": True}),
+    ("可以自己寫", {"allow_other": True}),
+    ("開放自己加", {"allow_other": True}),
+    ("開放自己填", {"allow_other": True}),
+    ("可自訂選項", {"allow_other": True}),
+    ("可以自訂", {"allow_other": True}),
+    ("允許新增", {"allow_other": True}),
+    ("可以補選項", {"allow_other": True}),
+    ("開放加選項", {"allow_other": True}),
+    ("可以加選項", {"allow_other": True}),
+    ("開放自由填寫", {"allow_other": True}),
+    ("不能新增選項", {"allow_other": False}),
+    ("不能新增", {"allow_other": False}),
+    ("不可自訂", {"allow_other": False}),
+    ("不開放新增", {"allow_other": False}),
+    ("不能自己加", {"allow_other": False}),
+    ("不能自己填", {"allow_other": False}),
+    ("不能加選項", {"allow_other": False}),
+    ("只能選現有的", {"allow_other": False}),
+]
+
 TABLES: dict[str, list[Entry]] = {
     "MULTI": MULTI,
     "ANON": ANON,
     "HOST": HOST,
     "LIVE": LIVE,
+    "ADDOPT": ADDOPT,
 }
 
 _NUM = r"(\d+|[一兩二三四五六七八九十]+)"

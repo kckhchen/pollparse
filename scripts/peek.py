@@ -16,6 +16,7 @@ LABEL_COLOR = {
     "ANON": "\033[94m",
     "HOST": "\033[91m",
     "LIVE": "\033[95m",
+    "ADDOPT": "\033[96m",
 }
 RESET = "\033[0m"
 

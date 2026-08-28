@@ -12,6 +12,7 @@ TAG_MAP = {
     "anon": "ANON",
     "host": "HOST",
     "live": "LIVE",
+    "addopt": "ADDOPT",
 }
 __all__ = ["load_file"]
 
