@@ -7,6 +7,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from pollparse import markup
 from pollparse.dataset_io import write_jsonl
+from pollparse.schema import SETTING_LABELS
 from pollparse.validate import check_all, coverage_report
 
 
@@ -42,7 +43,7 @@ def main():
 
     coverage = coverage_report(examples)
     print("\nCoverage:")
-    for label in ("TIME", "MULTI", "ANON", "HOST"):
+    for label in SETTING_LABELS:
         total = coverage["total"].get(label, 0)
         missing = coverage["missing"].get(label, 0)
         if total:

@@ -2,7 +2,7 @@ import re
 from itertools import pairwise
 
 from . import lexicon
-from .schema import encode_bio
+from .schema import LEXICON_LABELS, encode_bio
 
 TAG_MAP = {
     "t": "TITLE",
@@ -11,10 +11,12 @@ TAG_MAP = {
     "multi": "MULTI",
     "anon": "ANON",
     "host": "HOST",
+    "live": "LIVE",
 }
 __all__ = ["load_file"]
 
-_PATTERN = re.compile(r"<(t|o|time|multi|anon|host)>(.*?)</\1>", re.DOTALL)
+_TAGS = "|".join(sorted(TAG_MAP, key=len, reverse=True))
+_PATTERN = re.compile(rf"<({_TAGS})>(.*?)</\1>", re.DOTALL)
 
 
 def load_file(path):
@@ -103,7 +105,7 @@ def _resolve_settings(spans):
     settings = {}
     unresolved = []
     for span in spans:
-        if span["label"] in ("MULTI", "ANON", "HOST"):
+        if span["label"] in LEXICON_LABELS:
             value = lexicon.lookup(span["text"], span["label"])
             if value:
                 settings.update(value)

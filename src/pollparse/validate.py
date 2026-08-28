@@ -1,6 +1,6 @@
 from collections import Counter
 
-from .schema import SPAN_LABELS, decode_bio
+from .schema import SETTING_LABELS, SPAN_LABELS, decode_bio
 
 
 def coverage_report(examples):
@@ -9,7 +9,7 @@ def coverage_report(examples):
     uncovered_phrases = []
     for example in examples:
         for span in example["spans"]:
-            if span["label"] in ("TIME", "MULTI", "ANON", "HOST"):
+            if span["label"] in SETTING_LABELS:
                 span_counts[span["label"]] += 1
         for gap in example["meta"].get("unresolved", []):
             missing_counts[gap["label"]] += 1

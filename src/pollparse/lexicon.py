@@ -74,7 +74,44 @@ HOST: list[Entry] = [
     for role in HOST_ROLES
 ]
 
-TABLES: dict[str, list[Entry]] = {"MULTI": MULTI, "ANON": ANON, "HOST": HOST}
+LIVE: list[Entry] = [
+    ("即時開票", {"live_results": True}),
+    ("即時計票", {"live_results": True}),
+    ("即時公布", {"live_results": True}),
+    ("即時開獎", {"live_results": True}),
+    ("即時顯示票數", {"live_results": True}),
+    ("即時看票數", {"live_results": True}),
+    ("邊投邊看", {"live_results": True}),
+    ("邊投邊開", {"live_results": True}),
+    ("投完就看得到", {"live_results": True}),
+    ("投完可以看票數", {"live_results": True}),
+    ("隨時看票數", {"live_results": True}),
+    ("隨時可以看票數", {"live_results": True}),
+    ("隨時查看票數", {"live_results": True}),
+    ("即時更新票數", {"live_results": True}),
+    ("公開票數", {"live_results": True}),
+    ("開放看票數", {"live_results": True}),
+    ("不即時開票", {"live_results": False}),
+    ("不即時計票", {"live_results": False}),
+    ("不即時公布", {"live_results": False}),
+    ("投完才公布", {"live_results": False}),
+    ("投完才開票", {"live_results": False}),
+    ("最後才開票", {"live_results": False}),
+    ("最後才公布", {"live_results": False}),
+    ("全部投完才公布", {"live_results": False}),
+    ("不公開票數", {"live_results": False}),
+    ("最後公布票數", {"live_results": False}),
+    ("大家投完才公布", {"live_results": False}),
+    ("都投完才公布", {"live_results": False}),
+    ("先不要公布票數", {"live_results": False}),
+]
+
+TABLES: dict[str, list[Entry]] = {
+    "MULTI": MULTI,
+    "ANON": ANON,
+    "HOST": HOST,
+    "LIVE": LIVE,
+}
 
 _NUM = r"(\d+|[一兩二三四五六七八九十]+)"
 

@@ -8,9 +8,9 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from pollparse.baseline.parser import parse as parse_with_rules
 from pollparse.dataset_io import read_jsonl
+from pollparse.schema import SETTING_KEYS
 
 OUT = ROOT / "dist"
-SETTING_KEYS = ("deadline", "multichoice", "max_choices", "anonymous", "host_can_vote")
 
 
 def _spans_of(example: dict) -> set[tuple[int, int, str]]:

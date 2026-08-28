@@ -1,6 +1,7 @@
 import re
 
 from .. import lexicon
+from ..schema import LEXICON_LABELS
 from ._regex import alternation
 
 __all__ = ["find_candidates"]
@@ -13,9 +14,7 @@ def _pattern_for(label: str) -> str:
     return "|".join(parts)
 
 
-_LABEL_PATTERNS = {
-    label: re.compile(_pattern_for(label)) for label in ("MULTI", "ANON", "HOST")
-}
+_LABEL_PATTERNS = {label: re.compile(_pattern_for(label)) for label in LEXICON_LABELS}
 
 
 def find_candidates(text: str) -> list[dict]:

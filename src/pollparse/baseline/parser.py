@@ -1,7 +1,7 @@
 import unicodedata
 
 from .. import lexicon
-from ..schema import encode_bio
+from ..schema import SETTING_KEYS, encode_bio
 from . import settingscan, timeparse
 from .normalize import normalize
 
@@ -11,7 +11,6 @@ _TITLE_MARKERS = "?!:"
 _OPTION_DELIMITERS = "、,，/／;|．\n"
 _OPTION_CONJUNCTIONS = ("或", "跟", "和")
 _TRIM_CATEGORIES = {"So", "Ps", "Pe", "Cc", "Zs"}
-_SETTING_KEYS = ("deadline", "multichoice", "max_choices", "anonymous", "host_can_vote")
 
 
 def spans_from_rules(text: str) -> list[tuple[int, int, str]]:
@@ -66,7 +65,7 @@ def build_result(text: str, spans: list[tuple[int, int, str]]) -> dict:
                 (text[s:e] for s, e, label in spans if label == "TITLE"), None
             ),
             "options": [text[s:e] for s, e, label in spans if label == "OPT"],
-            "settings": {key: settings.get(key) for key in _SETTING_KEYS},
+            "settings": {key: settings.get(key) for key in SETTING_KEYS},
         },
     }
 

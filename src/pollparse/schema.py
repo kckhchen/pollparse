@@ -1,8 +1,23 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-SPAN_LABELS = ["TITLE", "OPT", "TIME", "MULTI", "ANON", "HOST"]
-SETTING_LABELS = ["TIME", "MULTI", "ANON", "HOST"]
+SPAN_LABELS = ["TITLE", "OPT", "TIME", "MULTI", "ANON", "HOST", "LIVE"]
+SETTING_LABELS = ["TIME", "MULTI", "ANON", "HOST", "LIVE"]
+
+# 靠詞庫查表就解得出語意的設定標籤。TIME 不在裡面 —— 它走 timeparse 的文法，
+# 不是查表。
+LEXICON_LABELS = [label for label in SETTING_LABELS if label != "TIME"]
+
+# API 回傳的設定欄位。這裡是唯一的定義點，parser、eval、app 都從這裡拿，
+# 加一個設定就不用再去翻有哪幾個檔案寫死了同一份清單。
+SETTING_KEYS = (
+    "deadline",
+    "multichoice",
+    "max_choices",
+    "anonymous",
+    "host_can_vote",
+    "live_results",
+)
 
 TAGS = ["O"] + [f"{prefix}-{label}" for label in SPAN_LABELS for prefix in ("B", "I")]
 TAG2ID = {tag: index for index, tag in enumerate(TAGS)}
