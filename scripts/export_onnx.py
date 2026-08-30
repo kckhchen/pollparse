@@ -1,6 +1,8 @@
 import argparse
+import json
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +16,23 @@ from pollparse.model.encoding import build_tokenizer
 
 ONNX_NAME = "model.onnx"
 QUANTIZED_NAME = "model.int8.onnx"
+REPORT_NAME = "train_report.json"
+
+
+def _record_export(model_dir: Path, entry: dict) -> None:
+    import onnxruntime as ort
+
+    report_path = model_dir / REPORT_NAME
+    if not report_path.exists():
+        print(f"  ! {REPORT_NAME} not found — skipping export record")
+        return
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    entry["exported_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entry["onnxruntime_version"] = ort.__version__
+    report["onnx"] = entry
+    report_path.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def _size_mb(path: Path) -> float:
@@ -162,6 +181,17 @@ def main() -> None:
     )
     if not result["within_tolerance"]:
         sys.exit("Tolerance exceeded")
+
+    _record_export(
+        model_dir,
+        {
+            "file": ONNX_NAME,
+            "size_mb": round(_size_mb(onnx_path), 1),
+            "opset": 17,
+            "max_abs_diff": result["max_abs_diff"],
+            "label_mismatch": result["label_mismatch"],
+        },
+    )
 
     if args.quantize:
         quantized = quantize(onnx_path)

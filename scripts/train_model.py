@@ -1,9 +1,14 @@
 import argparse
+import hashlib
+import json
+import platform
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import torch
+import transformers
 from torch.utils.data import DataLoader
 from transformers import (
     AutoModelForTokenClassification,
@@ -23,6 +28,43 @@ from pollparse.model.encoding import (
 from pollparse.schema import ID2TAG, TAGS, decode_bio
 
 DIST = ROOT / "dist"
+REPORT_NAME = "train_report.json"
+
+
+def _digest(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()[:16]
+
+
+def _dataset_facts() -> dict:
+    stats_path = DIST / "stats.json"
+    facts: dict = {"source": str(stats_path.relative_to(ROOT))}
+    train_path = DIST / "train.jsonl"
+    if train_path.exists():
+        facts["train_sha256"] = _digest(train_path)
+        facts["dataset_built_at"] = (
+            datetime.fromtimestamp(stats_path.stat().st_mtime, timezone.utc).isoformat()
+            if stats_path.exists()
+            else None
+        )
+    if not stats_path.exists():
+        return facts
+    stats = json.loads(stats_path.read_text(encoding="utf-8"))
+    facts["vocab_train"] = stats.get("vocab_train")
+    facts["vocab_heldout"] = stats.get("vocab_heldout")
+    for split in stats.get("splits", []):
+        facts[split["name"]] = {
+            "n": split.get("n"),
+            "labels": split.get("labels"),
+            "avg_options": split.get("avg_options"),
+            "len_p95": split.get("len_p95"),
+        }
+        if split["name"] == "train":
+            facts[split["name"]]["hard_flags"] = split.get("hard_flags")
+    return facts
 
 
 def _pick_device() -> str:
@@ -138,6 +180,8 @@ def main() -> None:
         f"  steps={total_steps}"
     )
 
+    epoch_reports = []
+    training_started = time.time()
     for epoch in range(1, args.epochs + 1):
         model.train()
         running_loss, started = 0.0, time.time()
@@ -157,6 +201,16 @@ def main() -> None:
                     flush=True,
                 )
         scores = span_f1(model, dev_loader, device)
+        epoch_reports.append(
+            {
+                "epoch": epoch,
+                "train_loss": round(running_loss / len(train_loader), 4),
+                "dev_oov_precision": round(scores["precision"], 4),
+                "dev_oov_recall": round(scores["recall"], 4),
+                "dev_oov_span_f1": round(scores["f1"], 4),
+                "seconds": round(time.time() - started, 1),
+            }
+        )
         print(
             f"epoch {epoch}  loss={running_loss / len(train_loader):.4f}  "
             f"dev_oov span P/R/F1={scores['precision']:.3f}/{scores['recall']:.3f}/{scores['f1']:.3f}"
@@ -165,7 +219,46 @@ def main() -> None:
 
     model.save_pretrained(out_dir)
     tokenizer.save_pretrained(out_dir)
+
+    report = {
+        "version": out_dir.name,
+        "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "training_seconds": round(time.time() - training_started, 1),
+        "config": {
+            "base_model": args.model,
+            "epochs": args.epochs,
+            "batch_size": args.batch_size,
+            "lr": args.lr,
+            "max_length": args.max_length,
+            "seed": args.seed,
+            "device": device,
+            "warmup_ratio": 0.1,
+            "optimizer": "AdamW",
+            "grad_clip": 1.0,
+            "torch_version": torch.__version__,
+            "transformers_version": transformers.__version__,
+            "python_version": platform.python_version(),
+        },
+        "model_info": {
+            "kind": "token-classification",
+            "scheme": "char-level BIO",
+            "num_labels": len(TAGS),
+            "labels": list(TAGS),
+            "params": sum(p.numel() for p in model.parameters()),
+        },
+        "data": _dataset_facts(),
+        "metrics": {
+            "dev_oov_span_f1": epoch_reports[-1]["dev_oov_span_f1"]
+            if epoch_reports
+            else None,
+            "per_epoch": epoch_reports,
+        },
+    }
+    (out_dir / REPORT_NAME).write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     print(f"Model saved to {out_dir}")
+    print(f"Report written to {out_dir / REPORT_NAME}")
 
 
 if __name__ == "__main__":
