@@ -8,7 +8,7 @@ __all__ = ["find_candidates", "parse_one"]
 
 _DAY = alternation(time_lexicon.DAY_OFFSET)
 _PART = alternation(time_lexicon.PART_KIND)
-_END = alternation(time_lexicon.END_MARKERS)
+_END = rf"(?!投完[才就可])(?:{alternation(time_lexicon.END_MARKERS)})"
 _BEFORE = alternation(time_lexicon.BEFORE_MARKERS)
 _LEAD = alternation(time_lexicon.LEAD_VERBS)
 _UNIT = alternation(time_lexicon.SECONDS_PER_UNIT)
@@ -26,9 +26,10 @@ _CLOCK_NO_DAY = rf"(?:(?P<part>{_PART}))?(?:{_CLOCK_CORE})?"
 
 _MONTH = r"1[0-2]|0?[1-9]"
 _DAY_NUM = r"3[01]|[12]\d|0?[1-9]"
+_DATE_NUM = r"\d{1,2}|[零一二三四五六七八九十]{1,3}"
 _DATE = (
     rf"(?:(?P<month>{_MONTH})/(?P<day_num>{_DAY_NUM})"
-    rf"|(?P<month2>{_MONTH})月(?P<day_num2>{_DAY_NUM})[日號])"
+    rf"|(?P<month2>{_DATE_NUM})月(?P<day_num2>{_DATE_NUM})[日號]?)"
 )
 _WEEK = rf"(?P<week_prefix>{_WEEK_PREFIX})?(?:週|星期|禮拜)(?P<weekday>[{_WEEKDAY}])"
 
@@ -146,7 +147,9 @@ def _handle_date(groups: _Groups) -> dict | None:
     day_num = groups.get("day_num") or groups.get("day_num2")
     if not month or not day_num:
         return None
-    month, day_num = int(month), int(day_num)
+    month, day_num = to_int(month), to_int(day_num)
+    if month is None or day_num is None:
+        return None
     if not (1 <= month <= 12 and 1 <= day_num <= 31):
         return None
     deadline = {

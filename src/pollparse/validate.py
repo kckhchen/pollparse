@@ -73,10 +73,10 @@ def _check(example):
         and any(
             span["end"] <= title_spans[0]["start"]
             for span in example["spans"]
-            if span["label"] != "TITLE"
+            if span["label"] == "OPT"
         )
     ):
-        errors.append("TITLE is not the first labelled span")
+        errors.append("OPT span precedes TITLE")
 
     if "explicit_sep" not in example["meta"]["hard"]:
         for span in example["spans"]:
