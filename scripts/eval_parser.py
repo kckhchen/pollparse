@@ -6,12 +6,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from pollparse.baseline.normalize import normalize
 from pollparse.baseline.parser import parse as parse_with_rules
+from pollparse.baseline.timeparse import find_candidates
 from pollparse.dataset_io import read_jsonl
 from pollparse.model.encoding import DEFAULT_MAX_LENGTH
 from pollparse.schema import SETTING_KEYS
 
 OUT = ROOT / "dist"
+
+
+def _time_resolves(text: str) -> bool:
+    normalized = normalize(text)
+    return any(
+        candidate["start"] == 0 and candidate["end"] == len(normalized)
+        for candidate in find_candidates(normalized)
+    )
 
 
 def _spans_of(example: dict) -> set[tuple[int, int, str]]:
@@ -61,6 +71,14 @@ def evaluate(examples: list[dict], parse) -> dict:
         totals["title"] += title_ok
         totals["settings"] += settings_ok
         totals["exact"] += exact
+        for span in example["spans"]:
+            if span["label"] == "TIME":
+                totals["time_gold"] += 1
+                totals["time_gold_resolvable"] += _time_resolves(span["text"])
+        for span in predicted["spans"]:
+            if span["label"] == "TIME":
+                totals["time_pred"] += 1
+                totals["time_pred_resolvable"] += _time_resolves(span["text"])
         for flag in example["meta"]["hard"] or ["(none)"]:
             by_flag[flag]["n"] += 1
             by_flag[flag]["exact"] += exact
@@ -103,6 +121,16 @@ def _print_report(name: str, report: dict, show_slices: bool) -> None:
     ):
         marker = "  <<<" if key == "exact" else ""
         print(f"  {caption:<10}{totals[key] / count:>8.1%}{marker}")
+
+    if totals["time_gold"]:
+        print(f"  {'-' * 40}")
+        print(
+            f"  TIME resolvable  gold {totals['time_gold_resolvable']}/"
+            f"{totals['time_gold']}"
+            f" ({totals['time_gold_resolvable'] / totals['time_gold']:.1%})"
+            f"   predicted {totals['time_pred_resolvable']}/{totals['time_pred']}"
+            f" ({totals['time_pred_resolvable'] / max(totals['time_pred'], 1):.1%})"
+        )
 
     if show_slices:
         print("Slice based on hard flag")
