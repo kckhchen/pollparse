@@ -1,5 +1,7 @@
 __all__ = [
     "BEFORE_MARKERS",
+    "DAYPART_OF",
+    "DAYPART_WORDS",
     "DAY_OFFSET",
     "DAY_WORDS",
     "DURATION_UNITS",
@@ -7,12 +9,15 @@ __all__ = [
     "LEAD_VERBS",
     "MERIDIEM_OF",
     "MIDNIGHT_AT_TWELVE",
+    "MONTH_END_WORDS",
     "PART_END",
     "PART_KIND",
     "PART_WORDS",
     "PM_FROM",
     "WEEKDAY_CHARS",
+    "WEEKEND_WORDS",
     "WEEK_PREFIX",
+    "WITHIN_MARKERS",
     "meridiem_of",
     "to_24_hour",
 ]
@@ -24,6 +29,28 @@ DAY_WORDS: list[tuple[str, int]] = [
     ("大後天", 3),
 ]
 DAY_OFFSET: dict[str, int] = dict(DAY_WORDS)
+
+DAYPART_WORDS: list[tuple[str, int, str]] = [
+    ("今晚", 0, "晚上"),
+    ("今早", 0, "早上"),
+    ("今晨", 0, "早上"),
+    ("明晚", 1, "晚上"),
+    ("明早", 1, "早上"),
+    ("後天晚", 2, "晚上"),
+]
+DAYPART_OF: dict[str, tuple[int, str]] = {
+    word: (offset, part) for word, offset, part in DAYPART_WORDS
+}
+
+MONTH_END_WORDS: dict[str, int] = {
+    "月底": 0,
+    "這個月底": 0,
+    "本月底": 0,
+    "下個月底": 1,
+    "下月底": 1,
+}
+
+WEEKEND_WORDS: list[str] = ["週末", "周末", "這週末", "本週末", "下週末"]
 
 PART_WORDS: list[tuple[str, str]] = [
     ("早上", "am"),
@@ -73,6 +100,7 @@ PART_END: dict[str, tuple[int, int, int]] = {
 
 END_MARKERS = ["截止", "收單", "結束", "關閉", "到期", "截止投票", "投完"]
 BEFORE_MARKERS = ["前", "之前", "以前", "為止"]
+WITHIN_MARKERS = ["內", "以內"]
 LEAD_VERBS = ["到", "開放到", "投到", "最晚", "限", "投票到"]
 
 DURATION_UNITS: list[tuple[str, int]] = [

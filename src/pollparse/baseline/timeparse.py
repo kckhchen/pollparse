@@ -10,6 +10,7 @@ _DAY = alternation(time_lexicon.DAY_OFFSET)
 _PART = alternation(time_lexicon.PART_KIND)
 _END = rf"(?!投完[才就可])(?:{alternation(time_lexicon.END_MARKERS)})"
 _BEFORE = alternation(time_lexicon.BEFORE_MARKERS)
+_WITHIN = alternation(time_lexicon.WITHIN_MARKERS)
 _LEAD = alternation(time_lexicon.LEAD_VERBS)
 _UNIT = alternation(time_lexicon.SECONDS_PER_UNIT)
 _WEEKDAY = "".join(char for char, _ in time_lexicon.WEEKDAY_CHARS)
@@ -32,6 +33,9 @@ _DATE = (
     rf"|(?P<month2>{_DATE_NUM})月(?P<day_num2>{_DATE_NUM})[日號]?)"
 )
 _WEEK = rf"(?P<week_prefix>{_WEEK_PREFIX})?(?:週|星期|禮拜)(?P<weekday>[{_WEEKDAY}])"
+_DAYPART = alternation(time_lexicon.DAYPART_OF)
+_MONTH_END = alternation(time_lexicon.MONTH_END_WORDS)
+_WEEKEND = alternation(time_lexicon.WEEKEND_WORDS)
 
 
 _Groups = dict[str, str | None]
@@ -109,6 +113,75 @@ def _handle_no_clock(groups: _Groups) -> dict | None:
     if part is not None:
         deadline["part"] = part
     return deadline
+
+
+def _handle_daypart(groups: _Groups) -> dict | None:
+    word = groups.get("daypart")
+    if word is None:
+        return None
+    day_offset, part = time_lexicon.DAYPART_OF[word]
+    deadline = {
+        "kind": "absolute",
+        "day_offset": day_offset,
+        "hour": None,
+        "minute": None,
+        "meridiem": None,
+        "hour_is_24h": False,
+    }
+    # 帶鐘點時（「今晚十一點截止」）要用展開出來的時段做 12/24 換算，
+    # 所以把 part 塞回 groups 再交給共用的那條路。
+    return (
+        deadline if _apply_clock_or_part(deadline, {**groups, "part": part}) else None
+    )
+
+
+def _handle_days_later(groups: _Groups) -> dict | None:
+    amount_text = groups.get("days")
+    if amount_text is None:
+        return None
+    days = to_int(amount_text)
+    if days is None or not 1 <= days <= 365:
+        return None
+    deadline = {
+        "kind": "absolute",
+        "day_offset": days,
+        "hour": None,
+        "minute": None,
+        "meridiem": None,
+        "hour_is_24h": False,
+    }
+    return deadline if _apply_clock_or_part(deadline, groups) else None
+
+
+def _handle_month_end(groups: _Groups) -> dict | None:
+    word = groups.get("month_end")
+    if word is None:
+        return None
+    deadline = {
+        "kind": "month_end",
+        "month_offset": time_lexicon.MONTH_END_WORDS[word],
+        "hour": None,
+        "minute": None,
+        "meridiem": None,
+        "hour_is_24h": False,
+    }
+    return deadline if _apply_clock_or_part(deadline, groups) else None
+
+
+def _handle_weekend(groups: _Groups) -> dict | None:
+    word = groups.get("weekend")
+    if word is None:
+        return None
+    deadline = {
+        "kind": "weekday",
+        "weekday": 7,
+        "week_offset": 1 if word.startswith("下") else None,
+        "hour": None,
+        "minute": None,
+        "meridiem": None,
+        "hour_is_24h": False,
+    }
+    return deadline if _apply_clock_or_part(deadline, groups) else None
 
 
 def _handle_clock24(groups: _Groups) -> dict | None:
@@ -190,6 +263,28 @@ _PATTERNS = [
         _handle_relative,
     ),
     (rf"限時(?P<amount>{_NUM}|半)(?P<unit>{_UNIT})", _handle_relative),
+    (
+        rf"(?P<daypart>{_DAYPART})(?:{_CLOCK_CORE})?(?:{_END}|{_BEFORE}(?:{_END})?)",
+        _handle_daypart,
+    ),
+    (
+        (
+            rf"(?:過|再)?(?P<days>{_NUM})天(?:之?後)?(?:{_CLOCK_NO_DAY})?"
+            rf"(?:{_END}|(?:{_BEFORE}|{_WITHIN})(?:{_END})?)"
+        ),
+        _handle_days_later,
+    ),
+    (
+        (
+            rf"(?P<month_end>{_MONTH_END})(?:{_CLOCK_NO_DAY})?"
+            rf"(?:{_END}|{_BEFORE}(?:{_END})?)"
+        ),
+        _handle_month_end,
+    ),
+    (
+        rf"(?P<weekend>{_WEEKEND})(?:{_CLOCK_NO_DAY})?(?:{_END}|{_BEFORE}(?:{_END})?)",
+        _handle_weekend,
+    ),
     (rf"{_DATE}(?:{_CLOCK_NO_DAY})?(?:{_END}|{_BEFORE}(?:{_END})?)", _handle_date),
     (rf"{_WEEK}(?:{_CLOCK_NO_DAY})?(?:{_END}|{_BEFORE}(?:{_END})?)", _handle_weekday),
     (
@@ -200,7 +295,10 @@ _PATTERNS = [
         _handle_clock24,
     ),
     (
-        rf"(?P<day>{_DAY})(?:(?P<part>{_PART}))?(?:{_END}|{_BEFORE}(?:{_END})?)",
+        (
+            rf"(?P<day>{_DAY})(?:(?P<part>{_PART}))?"
+            rf"(?:{_END}|(?:{_BEFORE}|{_WITHIN})(?:{_END})?)"
+        ),
         _handle_no_clock,
     ),
     (rf"(?P<part>{_PART})(?:{_END}|{_BEFORE}(?:{_END})?)", _handle_no_clock),
