@@ -107,3 +107,46 @@ def test_period_without_endword_is_not_time():
 def test_relative_time():
     assert when("限時兩小時") == at(8, 28, 16, 0)
     assert when("十分鐘後截止") == at(8, 28, 14, 10)
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("今晚截止", at(8, 28, 23, 59, 59)),
+        ("今晚十一點截止", at(8, 28, 23, 0)),
+        ("今晚8點收單", at(8, 28, 20, 0)),
+        ("明早八點截止", at(8, 29, 8, 0)),
+        ("明晚截止", at(8, 29, 23, 59, 59)),
+        ("三天後截止", at(8, 31, 23, 59, 59)),
+        ("3天後截止", at(8, 31, 23, 59, 59)),
+        ("過三天截止", at(8, 31, 23, 59, 59)),
+        ("再兩天截止", at(8, 30, 23, 59, 59)),
+        ("月底截止", at(8, 31, 23, 59, 59)),
+        ("月底前", at(8, 31, 23, 59, 59)),
+        ("本月底截止", at(8, 31, 23, 59, 59)),
+        ("下個月底截止", at(9, 30, 23, 59, 59)),
+        ("週末截止", at(8, 30, 23, 59, 59)),
+        ("週末前", at(8, 30, 23, 59, 59)),
+        ("下週末截止", at(9, 6, 23, 59, 59)),
+        ("今天內", at(8, 28, 23, 59, 59)),
+        ("明天內截止", at(8, 29, 23, 59, 59)),
+    ],
+)
+def test_gap_forms(text, expected):
+    assert when(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "出發前",
+        "生日前一天截止",
+        "吃飯前給我答案",
+        "放學前截止",
+        "下班前截止",
+        "三點",
+        "八點",
+    ],
+)
+def test_unresolvable_stays_unresolvable(text):
+    assert parse_one(text) is None

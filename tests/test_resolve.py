@@ -170,3 +170,48 @@ def test_relative_time_add_from_now():
 def test_remind_faraway_date_on_relative():
     got = resolve({"kind": "relative", "seconds": 60 * 60 * 24 * 40}, NOW)
     assert WARNING_DEADLINE_FAR_FUTURE in got["warnings"]
+
+
+def month_end(**kwargs):
+    base = {
+        "kind": "month_end",
+        "month_offset": 0,
+        "hour": None,
+        "minute": None,
+        "meridiem": None,
+        "hour_is_24h": False,
+    }
+    return {**base, **kwargs}
+
+
+def test_month_end_is_last_day_of_this_month():
+    assert resolve(month_end(), NOW)["at"] == at(8, 31, 23, 59, 59)
+
+
+def test_month_end_next_month():
+    assert resolve(month_end(month_offset=1), NOW)["at"] == at(9, 30, 23, 59, 59)
+
+
+def test_month_end_handles_february_length():
+    leap = datetime(2028, 2, 3, 9, 0, tzinfo=TZ)
+    assert resolve(month_end(), leap)["at"] == datetime(
+        2028, 2, 29, 23, 59, 59, tzinfo=TZ
+    )
+
+
+def test_month_end_rolls_over_the_year():
+    december = datetime(2026, 12, 5, 9, 0, tzinfo=TZ)
+    assert resolve(month_end(month_offset=1), december)["at"] == datetime(
+        2027, 1, 31, 23, 59, 59, tzinfo=TZ
+    )
+
+
+def test_month_end_on_the_last_day_after_the_deadline_moves_to_next_month():
+    # 8/31 23:59:59 之後才問「月底截止」—— 這個月底已經過了，指的是下個月底
+    late = datetime(2026, 8, 31, 23, 59, 59, tzinfo=TZ)
+    assert resolve(month_end(), late)["at"] == at(9, 30, 23, 59, 59)
+
+
+def test_unknown_kind_still_raises():
+    with pytest.raises(ValueError):
+        resolve({"kind": "lunar_new_year"}, NOW)
