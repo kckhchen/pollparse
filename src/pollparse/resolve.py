@@ -53,7 +53,6 @@ def _earliest_future(
 def _relative_to_today(
     moments: list[time], day_offset: int | None, now: datetime, warnings: list[str]
 ) -> datetime:
-    """把「今天／明天／沒講哪天」加上一組候選時刻，解成最早的未來時間。"""
     if day_offset is None:
         resolved = _earliest_future(
             [now.date(), now.date() + timedelta(days=1)], moments, now
@@ -118,6 +117,24 @@ def _resolve_weekday(deadline: dict, now: datetime, warnings: list[str]) -> date
     return resolved
 
 
+def _last_day_of_month(year: int, month: int) -> date:
+    return (date(year, month, 1) + timedelta(days=32)).replace(day=1) - timedelta(
+        days=1
+    )
+
+
+def _resolve_month_end(deadline: dict, now: datetime, warnings: list[str]) -> datetime:
+    month_index = now.month - 1 + deadline["month_offset"]
+    day = _last_day_of_month(now.year + month_index // 12, month_index % 12 + 1)
+    moments = _moments(deadline)
+    resolved = _earliest_future([day], moments, now)
+    if resolved is None:
+        month_index += 1
+        day = _last_day_of_month(now.year + month_index // 12, month_index % 12 + 1)
+        resolved = _earliest_future([day], moments, now) or _at(day, moments[-1], now)
+    return resolved
+
+
 def resolve(deadline: dict, now: datetime) -> dict:
     if now.tzinfo is None or now.tzinfo.utcoffset(now) is None:
         raise ValueError(
@@ -135,6 +152,8 @@ def resolve(deadline: dict, now: datetime) -> dict:
         at = _resolve_date(deadline, now, warnings)
     elif kind == "weekday":
         at = _resolve_weekday(deadline, now, warnings)
+    elif kind == "month_end":
+        at = _resolve_month_end(deadline, now, warnings)
     else:
         raise ValueError(f"unknown deadline kind: {kind!r}")
 
