@@ -1,15 +1,14 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+# all labels as a list. These are imported to other modules and serve as the ground truth.
 SPAN_LABELS = ["TITLE", "OPT", "TIME", "MULTI", "ANON", "HOST", "LIVE", "ADDOPT"]
 SETTING_LABELS = ["TIME", "MULTI", "ANON", "HOST", "LIVE", "ADDOPT"]
 
-# 靠詞庫查表就解得出語意的設定標籤。TIME 不在裡面 —— 它走 timeparse 的文法，
-# 不是查表。
+# setting labels that can be resolved with simple lexicon lookups. Everything but time (requires now).
 LEXICON_LABELS = [label for label in SETTING_LABELS if label != "TIME"]
 
-# API 回傳的設定欄位。這裡是唯一的定義點，parser、eval、app 都從這裡拿，
-# 加一個設定就不用再去翻有哪幾個檔案寫死了同一份清單。
+# for api
 SETTING_KEYS = (
     "deadline",
     "multichoice",
@@ -20,6 +19,7 @@ SETTING_KEYS = (
     "allow_other",
 )
 
+# all legitimate BIO tags
 TAGS = ["O"] + [f"{prefix}-{label}" for label in SPAN_LABELS for prefix in ("B", "I")]
 TAG2ID = {tag: index for index, tag in enumerate(TAGS)}
 ID2TAG = {index: tag for tag, index in TAG2ID.items()}
