@@ -215,3 +215,42 @@ def test_month_end_on_the_last_day_after_the_deadline_moves_to_next_month():
 def test_unknown_kind_still_raises():
     with pytest.raises(ValueError):
         resolve({"kind": "lunar_new_year"}, NOW)
+
+
+def date_deadline(month, day, **kwargs):
+    base = {
+        "kind": "date",
+        "month": month,
+        "day": day,
+        "year": None,
+        "hour": None,
+        "minute": None,
+        "meridiem": None,
+        "hour_is_24h": False,
+    }
+    return {**base, **kwargs}
+
+
+def test_feb_29_resolves_into_next_leap_year_without_warning():
+    now = datetime(2027, 1, 10, 9, 0, tzinfo=TZ)
+    got = resolve(date_deadline(2, 29), now)
+    assert got["at"] == datetime(2028, 2, 29, 23, 59, 59, tzinfo=TZ)
+    assert WARNING_INVALID_DATE not in got["warnings"]
+
+
+def test_feb_29_in_a_leap_year_does_not_warn_about_next_year():
+    now = datetime(2028, 1, 10, 9, 0, tzinfo=TZ)
+    got = resolve(date_deadline(2, 29), now)
+    assert got["at"] == datetime(2028, 2, 29, 23, 59, 59, tzinfo=TZ)
+    assert WARNING_INVALID_DATE not in got["warnings"]
+
+
+def test_feb_29_warns_when_neither_candidate_year_is_a_leap_year():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=TZ)
+    got = resolve(date_deadline(2, 29), now)
+    assert got["warnings"].count(WARNING_INVALID_DATE) == 1
+
+
+def test_invalid_date_warns_exactly_once():
+    got = resolve(date_deadline(2, 30), NOW)
+    assert got["warnings"].count(WARNING_INVALID_DATE) == 1

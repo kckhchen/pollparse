@@ -83,8 +83,9 @@ def _resolve_date(deadline: dict, now: datetime, warnings: list[str]) -> datetim
         try:
             days.append(date(year, deadline["month"], deadline["day"]))
         except ValueError:
-            warnings.append(WARNING_INVALID_DATE)
+            continue
     if not days:
+        warnings.append(WARNING_INVALID_DATE)
         return _at(now.date(), _END_OF_DAY, now)
 
     resolved = _earliest_future(days, moments, now)
