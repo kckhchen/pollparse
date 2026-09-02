@@ -5,11 +5,11 @@ from ..schema import SETTING_KEYS, encode_bio
 from . import settingscan, timeparse
 from .normalize import normalize
 
-__all__ = ["build_result", "parse", "spans_from_rules"]
+__all__ = ["OPTION_CONJUNCTIONS", "build_result", "parse", "spans_from_rules"]
 
 _TITLE_MARKERS = "?!:"
 _OPTION_DELIMITERS = "、,，/／;|．\n"
-_OPTION_CONJUNCTIONS = ("或", "跟", "和")
+OPTION_CONJUNCTIONS = ("或",)
 _TRIM_CATEGORIES = {"So", "Ps", "Pe", "Cc", "Zs"}
 
 
@@ -147,7 +147,7 @@ def _split_options(text: str, ranges: list[tuple[int, int]]) -> list[tuple[int, 
         current_start = None
         position = range_start
         while position < range_end:
-            for conjunction in _OPTION_CONJUNCTIONS:
+            for conjunction in OPTION_CONJUNCTIONS:
                 if text.startswith(conjunction, position) and current_start is not None:
                     options.append((current_start, position))
                     current_start = None
