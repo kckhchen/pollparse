@@ -90,14 +90,14 @@ def _strip_markup(line):
     return "".join(text_fragments), spans
 
 
-_EXPLICIT_DELIMITERS = "、／/"
+from .baseline.parser import EXPLICIT_DELIMITERS
 
 
 def _detect_hard_flags(text: str, spans: list[dict]) -> list[str]:
     options = [span for span in spans if span["label"] == "OPT"]
     for previous, following in pairwise(options):
         separator = text[previous["end"] : following["start"]]
-        if any(char in _EXPLICIT_DELIMITERS for char in separator):
+        if any(char in EXPLICIT_DELIMITERS for char in separator):
             return ["explicit_sep"]
     return []
 

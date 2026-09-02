@@ -5,10 +5,19 @@ from ..schema import SETTING_KEYS, encode_bio
 from . import settingscan, timeparse
 from .normalize import normalize
 
-__all__ = ["OPTION_CONJUNCTIONS", "build_result", "parse", "spans_from_rules"]
+__all__ = [
+    "EXPLICIT_DELIMITERS",
+    "OPTION_CONJUNCTIONS",
+    "OPTION_DELIMITERS",
+    "build_result",
+    "parse",
+    "spans_from_rules",
+]
 
 _TITLE_MARKERS = "?!:"
-_OPTION_DELIMITERS = "、,，/／;|．\n"
+
+OPTION_DELIMITERS = "、,，/／;|．\n"
+EXPLICIT_DELIMITERS = "、／/"
 OPTION_CONJUNCTIONS = ("或",)
 _TRIM_CATEGORIES = {"So", "Ps", "Pe", "Cc", "Zs"}
 
@@ -100,7 +109,7 @@ def _split_title(text: str, settings: list[dict]) -> tuple[int, int] | None:
     if newline > 0:
         first_line = text[:newline]
         looks_like_one_unit = not any(
-            char in _OPTION_DELIMITERS or char.isspace() for char in first_line
+            char in OPTION_DELIMITERS or char.isspace() for char in first_line
         )
         if looks_like_one_unit and not any(
             span["start"] < newline for span in settings
@@ -130,7 +139,7 @@ def _free_ranges(length: int, taken: list[tuple[int, int]]) -> list[tuple[int, i
 
 def _is_delimiter(text: str, position: int) -> bool:
     char = text[position]
-    if not (char.isspace() or char in _OPTION_DELIMITERS):
+    if not (char.isspace() or char in OPTION_DELIMITERS):
         return False
     inside_a_date = (
         char in "/／"
