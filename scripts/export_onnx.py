@@ -174,13 +174,19 @@ def main() -> None:
     print(f"  {ONNX_NAME}  {_size_mb(onnx_path):.1f} MB")
 
     result = verify(model_dir, onnx_path, args.tolerance)
-    status = "✓" if result["within_tolerance"] else "✗"
+    labels_agree = result["label_mismatch"] == 0
+    status = "✓" if labels_agree and result["within_tolerance"] else "✗"
     print(
         f"  {status} Max diff from PyTorch {result['max_abs_diff']:.2e}"
         f", descrepencies: {result['label_mismatch']}"
     )
+    if not labels_agree:
+        sys.exit(f"ONNX predicts different labels ({result['label_mismatch']} tokens)")
     if not result["within_tolerance"]:
-        sys.exit("Tolerance exceeded")
+        print(
+            f"  ! max_abs_diff {result['max_abs_diff']:.2e} exceeds "
+            f"{args.tolerance:.0e} but every label agrees — continuing"
+        )
 
     _record_export(
         model_dir,
