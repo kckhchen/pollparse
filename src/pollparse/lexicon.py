@@ -4,6 +4,7 @@ from .numerals import to_int
 
 Entry = tuple[str, dict]
 
+# a full list of lexicon for lookup.
 MULTI_YES_PREFIXES = ["可", "可以", "能", ""]
 MULTI_YES_STEMS = [
     "複選",
@@ -87,6 +88,14 @@ MULTI_LIMIT_TEMPLATES = [
     "每人可投{n}票",
     "每人有{n}票",
 ]
+
+_NUM = r"(\d{1,4}|[一兩二三四五六七八九十]+)"
+
+LIMIT_PATTERN = "|".join(
+    "(?:" + re.escape(template).replace(re.escape("{n}"), _NUM) + ")"
+    for template in MULTI_LIMIT_TEMPLATES
+)
+_LIMIT_RE = re.compile(LIMIT_PATTERN)
 
 ANON: list[Entry] = [
     ("匿名", {"anonymous": True}),
@@ -199,14 +208,6 @@ TABLES: dict[str, list[Entry]] = {
     "LIVE": LIVE,
     "ADDOPT": ADDOPT,
 }
-
-_NUM = r"(\d{1,4}|[一兩二三四五六七八九十]+)"
-
-LIMIT_PATTERN = "|".join(
-    "(?:" + re.escape(template).replace(re.escape("{n}"), _NUM) + ")"
-    for template in MULTI_LIMIT_TEMPLATES
-)
-_LIMIT_RE = re.compile(LIMIT_PATTERN)
 
 
 def surfaces(label: str) -> list[str]:
