@@ -4,29 +4,49 @@ from .numerals import to_int
 
 Entry = tuple[str, dict]
 
-MULTI: list[Entry] = [
-    ("可複選", {"multichoice": True}),
-    ("複選", {"multichoice": True}),
-    ("複選題", {"multichoice": True}),
-    ("可多選", {"multichoice": True}),
-    ("可以多選", {"multichoice": True}),
-    ("多選", {"multichoice": True}),
-    ("可以都選", {"multichoice": True}),
-    ("可勾多項", {"multichoice": True}),
-    ("單選", {"multichoice": False}),
-    ("單選題", {"multichoice": False}),
-    ("只能選一個", {"multichoice": False}),
-    ("只能選一項", {"multichoice": False}),
-    ("限選一個", {"multichoice": False}),
-    ("限選一項", {"multichoice": False}),
-    ("一人一票", {"multichoice": False}),
-    ("每人一票", {"multichoice": False}),
-    ("不能複選", {"multichoice": False}),
-    ("不能多選", {"multichoice": False}),
-    ("可以選多個", {"multichoice": True}),
-    ("可以選很多個", {"multichoice": True}),
-    ("可複", {"multichoice": True}),
+MULTI_YES_PREFIXES = ["可", "可以", "能", ""]
+MULTI_YES_STEMS = [
+    "複選",
+    "多選",
+    "重複選",
+    "選多個",
+    "選很多個",
+    "選好幾個",
+    "選多項",
+    "勾多項",
+    "勾多個",
 ]
+
+MULTI_YES_EXTRA = ["複選題", "可以都選", "都可以選", "可複", "可多", "都選", "全選"]
+
+MULTI_NO_ENTRIES = [
+    "單選",
+    "單選題",
+    "只能選一個",
+    "只能選一項",
+    "只能一個",
+    "只能一項",
+    "限選一個",
+    "限選一項",
+    "一人一票",
+    "每人一票",
+    "不能複選",
+    "不能多選",
+    "不可複選",
+    "不能重複選",
+    "只可以選一個",
+    "只能勾一個",
+]
+
+MULTI: list[Entry] = (
+    [
+        (prefix + stem, {"multichoice": True})
+        for stem in MULTI_YES_STEMS
+        for prefix in MULTI_YES_PREFIXES
+    ]
+    + [(word, {"multichoice": True}) for word in MULTI_YES_EXTRA]
+    + [(word, {"multichoice": False}) for word in MULTI_NO_ENTRIES]
+)
 
 MULTI_LIMIT_TEMPLATES = [
     "最多選{n}個",
@@ -52,6 +72,10 @@ MULTI_LIMIT_TEMPLATES = [
     "可勾{n}個",
     "{n}個以內",
     "{n}項以內",
+    "限{n}個",
+    "限{n}項",
+    "只能{n}個",
+    "只能{n}項",
     "每人{n}票",
     "一人{n}票",
     "每人最多{n}票",
@@ -137,40 +161,37 @@ LIVE: list[Entry] = [
     ("先不要公布票數", {"live_results": False}),
 ]
 
-# 開放投票者自己新增選項。
-#
-# 這裡刻意**不收**「其他」「其它」「別的」這種光禿禿的名詞 —— 那些是選項，
-# 不是設定。「其他」是選票上的一個固定選擇（點了就是點了，不能打字），跟
-# 「開放大家自己新增」是兩個不同的功能，而且可以同時存在。真正表達這個設定
-# 的說法一定帶動詞：新增／加／填／自訂／補／允許／開放。
-ADDOPT: list[Entry] = [
-    ("可新增選項", {"allow_other": True}),
-    ("可以新增選項", {"allow_other": True}),
-    ("可以新增", {"allow_other": True}),
-    ("開放新增", {"allow_other": True}),
-    ("開放新增選項", {"allow_other": True}),
-    ("可以自己加", {"allow_other": True}),
-    ("可以自己填", {"allow_other": True}),
-    ("可以自己寫", {"allow_other": True}),
-    ("開放自己加", {"allow_other": True}),
-    ("開放自己填", {"allow_other": True}),
-    ("可自訂選項", {"allow_other": True}),
-    ("可以自訂", {"allow_other": True}),
-    ("允許新增", {"allow_other": True}),
-    ("可以補選項", {"allow_other": True}),
-    ("開放加選項", {"allow_other": True}),
-    ("可以加選項", {"allow_other": True}),
-    ("開放自由填寫", {"allow_other": True}),
-    ("不能新增選項", {"allow_other": False}),
-    ("不能新增", {"allow_other": False}),
-    ("不可自訂", {"allow_other": False}),
-    ("不開放新增", {"allow_other": False}),
-    ("不能自己加", {"allow_other": False}),
-    ("不能自己填", {"allow_other": False}),
-    ("不能加選項", {"allow_other": False}),
-    ("只能選現有的", {"allow_other": False}),
+ADDOPT_YES_PREFIXES = ["可", "可以", "開放", "允許"]
+ADDOPT_NO_PREFIXES = ["不能", "不可", "不開放"]
+ADDOPT_STEMS = [
+    "新增",
+    "新增選項",
+    "加選項",
+    "補選項",
+    "自己加",
+    "自己填",
+    "自己寫",
+    "自訂",
+    "自訂選項",
+    "自由填寫",
 ]
 
+ADDOPT: list[Entry] = (
+    [
+        (prefix + stem, {"allow_other": True})
+        for stem in ADDOPT_STEMS
+        for prefix in ADDOPT_YES_PREFIXES
+    ]
+    + [
+        (prefix + stem, {"allow_other": False})
+        for stem in ADDOPT_STEMS
+        for prefix in ADDOPT_NO_PREFIXES
+    ]
+    + [
+        (word, {"allow_other": False})
+        for word in ["只能選現有的", "只能選上面的", "不能加"]
+    ]
+)
 TABLES: dict[str, list[Entry]] = {
     "MULTI": MULTI,
     "ANON": ANON,
