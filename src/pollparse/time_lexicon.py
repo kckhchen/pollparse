@@ -30,6 +30,7 @@ DAY_WORDS: list[tuple[str, int]] = [
 ]
 DAY_OFFSET: dict[str, int] = dict(DAY_WORDS)
 
+# separate day word and daypart word
 DAYPART_WORDS: list[tuple[str, int, str]] = [
     ("今晚", 0, "晚上"),
     ("今早", 0, "早上"),
@@ -74,10 +75,13 @@ MERIDIEM_OF: dict[str, str] = {
     "dawn": "am",
 }
 
+# these counts as midnight when used alongside with 12 點
 MIDNIGHT_AT_TWELVE: frozenset[str] = frozenset(
     {"早上", "上午", "晚上", "晚間", "凌晨", "半夜", "午夜"}
 )
 
+# decides what counts as pm.
+# 晚上四點 means 4am while 晚上五點 means 5pm in Taiwanese Mandarin
 PM_FROM: dict[str, int] = {
     "下午": 1,
     "傍晚": 1,
@@ -85,6 +89,7 @@ PM_FROM: dict[str, int] = {
     "晚間": 5,
 }
 
+# if not specified by user, decides when a daypart ends
 PART_END: dict[str, tuple[int, int, int]] = {
     "早上": (12, 0, 0),
     "上午": (12, 0, 0),
