@@ -138,38 +138,50 @@ HOST: list[Entry] = [
     for role in HOST_ROLES
 ]
 
-LIVE: list[Entry] = [
-    ("即時開票", {"live_results": True}),
-    ("即時計票", {"live_results": True}),
-    ("即時公布", {"live_results": True}),
-    ("即時開獎", {"live_results": True}),
-    ("即時顯示票數", {"live_results": True}),
-    ("即時看票數", {"live_results": True}),
-    ("邊投邊看", {"live_results": True}),
-    ("邊投邊開", {"live_results": True}),
-    ("投完就看得到", {"live_results": True}),
-    ("投完可以看票數", {"live_results": True}),
-    ("隨時看票數", {"live_results": True}),
-    ("隨時可以看票數", {"live_results": True}),
-    ("隨時查看票數", {"live_results": True}),
-    ("即時更新票數", {"live_results": True}),
-    ("公開票數", {"live_results": True}),
-    ("開放看票數", {"live_results": True}),
-    ("不即時開票", {"live_results": False}),
-    ("不即時計票", {"live_results": False}),
-    ("不即時公布", {"live_results": False}),
-    ("投完才公布", {"live_results": False}),
-    ("投完才開票", {"live_results": False}),
-    ("最後才開票", {"live_results": False}),
-    ("最後才公布", {"live_results": False}),
-    ("全部投完才公布", {"live_results": False}),
-    ("不公開票數", {"live_results": False}),
-    ("最後公布票數", {"live_results": False}),
-    ("大家投完才公布", {"live_results": False}),
-    ("都投完才公布", {"live_results": False}),
-    ("先不要公布票數", {"live_results": False}),
-]
+LIVE_ADVERBS = ["即時", "立即", "馬上", "立刻", "當場"]
+LIVE_ACTIONS = ["開票", "計票", "公布", "開獎"]
 
+LIVE_WATCH_ADVERBS = ["即時", "隨時", "馬上", "立刻"]
+LIVE_WATCH_ACTIONS = ["看票數", "顯示票數", "更新票數", "查看票數"]
+
+LIVE_LATE_PREFIXES = ["投完才", "最後才", "都投完才", "大家投完才", "全部投完才"]
+LIVE_LATE_ACTIONS = ["公布", "開票", "計票"]
+
+LIVE_YES_EXTRA = [
+    "邊投邊看",
+    "邊投邊開",
+    "投完就看得到",
+    "投完可以看票數",
+    "隨時可以看票數",
+    "公開票數",
+    "開放看票數",
+]
+LIVE_NO_EXTRA = ["不公開票數", "最後公布票數", "先不要公布票數", "先不公布"]
+
+LIVE: list[Entry] = (
+    [
+        (adverb + action, {"live_results": True})
+        for action in LIVE_ACTIONS
+        for adverb in LIVE_ADVERBS
+    ]
+    + [
+        (adverb + action, {"live_results": True})
+        for action in LIVE_WATCH_ACTIONS
+        for adverb in LIVE_WATCH_ADVERBS
+    ]
+    + [(word, {"live_results": True}) for word in LIVE_YES_EXTRA]
+    + [
+        ("不" + adverb + action, {"live_results": False})
+        for action in LIVE_ACTIONS
+        for adverb in LIVE_ADVERBS
+    ]
+    + [
+        (prefix + action, {"live_results": False})
+        for action in LIVE_LATE_ACTIONS
+        for prefix in LIVE_LATE_PREFIXES
+    ]
+    + [(word, {"live_results": False}) for word in LIVE_NO_EXTRA]
+)
 ADDOPT_YES_PREFIXES = ["可", "可以", "開放", "允許"]
 ADDOPT_NO_PREFIXES = ["不能", "不可", "不開放"]
 ADDOPT_STEMS = [
