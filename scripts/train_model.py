@@ -74,17 +74,20 @@ def _pick_device() -> str:
 
 
 @torch.no_grad()
-def span_f1(model, loader, device) -> dict:
+def evaluate(model, loader, device) -> dict:
     model.eval()
     hits = 0
     predicted_total = 0
     gold_total = 0
+    loss_sum = 0.0
+    batches = 0
 
     for batch in loader:
         batch = {key: value.to(device) for key, value in batch.items()}
-        predictions = model(
-            input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]
-        ).logits.argmax(-1)
+        outputs = model(**batch)
+        loss_sum += outputs.loss.item()
+        batches += 1
+        predictions = outputs.logits.argmax(-1)
 
         for predicted_row, gold_row in zip(predictions, batch["labels"]):
             keep = gold_row != IGNORE_LABEL
@@ -101,7 +104,12 @@ def span_f1(model, loader, device) -> dict:
     precision = hits / predicted_total if predicted_total else 0.0
     recall = hits / gold_total if gold_total else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    return {"precision": precision, "recall": recall, "f1": f1}
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "loss": loss_sum / batches if batches else 0.0,
+    }
 
 
 def main() -> None:
@@ -215,20 +223,22 @@ def main() -> None:
                     f"loss={running_loss / step:.4f}",
                     flush=True,
                 )
-        scores = span_f1(model, dev_loader, device)
+        scores = evaluate(model, dev_loader, device)
         epoch_reports.append(
             {
                 "epoch": epoch,
                 "train_loss": round(running_loss / len(train_loader), 4),
-                "dev_oov_precision": round(scores["precision"], 4),
-                "dev_oov_recall": round(scores["recall"], 4),
-                "dev_oov_span_f1": round(scores["f1"], 4),
+                "dev_loss": round(scores["loss"], 4),
+                "dev_precision": round(scores["precision"], 4),
+                "dev_recall": round(scores["recall"], 4),
+                "dev_span_f1": round(scores["f1"], 4),
                 "seconds": round(time.time() - started, 1),
             }
         )
         print(
             f"epoch {epoch}  loss={running_loss / len(train_loader):.4f}  "
-            f"dev_oov span P/R/F1={scores['precision']:.3f}/{scores['recall']:.3f}/{scores['f1']:.3f}"
+            f"dev loss={scores['loss']:.4f}  "
+            f"dev span P/R/F1={scores['precision']:.3f}/{scores['recall']:.3f}/{scores['f1']:.3f}"
             f"  ({time.time() - started:.0f}s)"
         )
 
