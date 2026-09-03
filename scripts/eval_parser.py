@@ -6,12 +6,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from pollparse.baseline.normalize import normalize
 from pollparse.baseline.parser import parse as parse_with_rules
-from pollparse.baseline.timeparse import find_candidates
 from pollparse.dataset_io import read_jsonl
 from pollparse.model.encoding import DEFAULT_MAX_LENGTH
+from pollparse.normalize import normalize
 from pollparse.schema import SETTING_KEYS
+from pollparse.timeparse import find_candidates
 
 OUT = ROOT / "dist"
 

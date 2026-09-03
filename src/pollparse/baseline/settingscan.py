@@ -1,8 +1,8 @@
 import re
 
 from .. import lexicon
+from .._regex import alternation
 from ..schema import LEXICON_LABELS
-from ._regex import alternation
 
 __all__ = ["find_candidates"]
 

@@ -1,8 +1,8 @@
 import re
 
-from .. import time_lexicon
-from ..numerals import to_int
+from . import time_lexicon
 from ._regex import alternation
+from .numerals import to_int
 
 __all__ = ["find_candidates", "parse_one"]
 

@@ -4,8 +4,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from pollparse.baseline.timeparse import parse_one
 from pollparse.resolve import resolve
+from pollparse.timeparse import parse_one
 
 TZ = timezone(timedelta(hours=8))
 NOW = datetime(2026, 8, 28, 14, 0, tzinfo=TZ)

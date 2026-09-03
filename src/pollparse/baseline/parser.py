@@ -1,9 +1,9 @@
 import unicodedata
 
-from .. import lexicon
+from .. import lexicon, timeparse
+from ..normalize import normalize
 from ..schema import SETTING_KEYS, encode_bio
-from . import settingscan, timeparse
-from .normalize import normalize
+from . import settingscan
 
 __all__ = [
     "EXPLICIT_DELIMITERS",
