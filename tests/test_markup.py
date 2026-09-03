@@ -87,7 +87,7 @@ def test_time_unresolved_should_be_marked(write):
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
 
 
-@pytest.mark.parametrize("name", ["train.txt", "dev_oov.txt"])
+@pytest.mark.parametrize("name", ["train.txt", "dev.txt"])
 def test_example_markup_still_parses(name):
     examples = load_file(EXAMPLES / name)
     assert examples
@@ -95,7 +95,7 @@ def test_example_markup_still_parses(name):
 
 
 def test_example_settings_are_all_in_the_lexicon():
-    for name in ("train.txt", "dev_oov.txt"):
+    for name in ("train.txt", "dev.txt"):
         report = coverage_report(load_file(EXAMPLES / name))
         assert report["uncovered_phrases"] == []
 
@@ -109,4 +109,4 @@ def test_example_splits_share_no_option_vocabulary():
             if span["label"] == "OPT"
         }
 
-    assert not options("train.txt") & options("dev_oov.txt")
+    assert not options("train.txt") & options("dev.txt")

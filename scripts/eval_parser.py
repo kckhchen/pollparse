@@ -148,7 +148,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--slice", action="store_true", help="Slice based on hard flag")
     parser.add_argument(
-        "--splits", nargs="*", default=["dev_iid", "dev_oov", "eval_real"]
+        "--splits", nargs="*", default=["dev"]
     )
     which = parser.add_mutually_exclusive_group(required=True)
     which.add_argument(

@@ -248,9 +248,7 @@ def main() -> None:
         },
         "data": _dataset_facts(),
         "metrics": {
-            "dev_oov_span_f1": epoch_reports[-1]["dev_oov_span_f1"]
-            if epoch_reports
-            else None,
+            "dev_span_f1": epoch_reports[-1]["dev_span_f1"] if epoch_reports else None,
             "per_epoch": epoch_reports,
         },
     }
