@@ -72,7 +72,7 @@ def export(model_dir: Path) -> Path:
 def _bundle_weights(onnx_path: Path) -> None:
     import onnx
 
-    model = onnx.load(str(onnx_path))  # 這裡會把外部權重讀進記憶體
+    model = onnx.load(str(onnx_path))
     onnx.save(model, str(onnx_path), save_as_external_data=False)
     external = onnx_path.with_suffix(onnx_path.suffix + ".data")
     external.unlink(missing_ok=True)
