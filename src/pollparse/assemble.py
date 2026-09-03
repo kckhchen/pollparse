@@ -5,6 +5,8 @@ from .schema import SETTING_KEYS, encode_bio
 __all__ = ["build_result"]
 
 
+# takes a plain text string and the predicted spans as input
+# retuens a formatted dictionary for output
 def build_result(text: str, spans: list[tuple[int, int, str]]) -> dict:
     normalized = normalize(text)
 
