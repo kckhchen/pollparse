@@ -1,0 +1,8 @@
+<t>宵夜吃什麼</t>？<o>鹹酥雞</o> <o>臭豆腐</o> <o>蚵仔煎</o>
+<t>哪天出發</t>？<o>初二</o> <o>初三</o> <time>後天下午三點收單</time><multi>單選</multi><anon>記名</anon>
+<time>這週五前截止</time> <t>要帶什麼</t>？<o>睡袋</o> <o>帳篷</o>
+<t>用哪個工具</t>？<o>Google Meet</o>、<o>Microsoft Teams</o> <live>投完才公布</live>
+<t>這次投票怎麼投</t>？<o>記名</o> <o>不記名</o> <o>看情況</o>
+<t>幾點集合</t>？<o>七點</o> <o>七點半</o> <o>九點半</o> <time>六點半截止</time>
+<t>報名哪個梯次</t>？<o>三天兩夜</o> <o>五天四夜</o> <host>主持人不投</host>
+<t>要用哪個方案</t>？<o>甲案</o> <o>乙案</o> <o>丙案</o> <addopt>開放新增</addopt>

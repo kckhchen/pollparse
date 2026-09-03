@@ -1,6 +1,9 @@
+from pathlib import Path
+
 import pytest
 
 from pollparse.markup import TAG_MAP, load_file
+from pollparse.validate import check_all, coverage_report
 
 
 @pytest.fixture
@@ -79,3 +82,31 @@ def test_time_unresolved_should_be_marked(write):
     assert example["target"]["settings"].get("deadline") is None
     gaps = example["meta"].get("unresolved", [])
     assert any(gap["label"] == "TIME" for gap in gaps), "Time gap is not marked"
+
+
+EXAMPLES = Path(__file__).resolve().parent.parent / "examples"
+
+
+@pytest.mark.parametrize("name", ["train.txt", "dev_oov.txt"])
+def test_example_markup_still_parses(name):
+    examples = load_file(EXAMPLES / name)
+    assert examples
+    assert not check_all(examples)["bad"]
+
+
+def test_example_settings_are_all_in_the_lexicon():
+    for name in ("train.txt", "dev_oov.txt"):
+        report = coverage_report(load_file(EXAMPLES / name))
+        assert report["uncovered_phrases"] == []
+
+
+def test_example_splits_share_no_option_vocabulary():
+    def options(name):
+        return {
+            span["text"]
+            for example in load_file(EXAMPLES / name)
+            for span in example["spans"]
+            if span["label"] == "OPT"
+        }
+
+    assert not options("train.txt") & options("dev_oov.txt")
