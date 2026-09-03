@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from tokenizers import Tokenizer
 
-from ..baseline.parser import build_result
+from ..assemble import build_result
 from ..schema import ID2TAG, decode_bio
 from .encoding import DEFAULT_MAX_LENGTH, decode_tags, to_model_text
 

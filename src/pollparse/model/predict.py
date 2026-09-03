@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModelForTokenClassification
 
-from ..baseline.parser import build_result
+from ..assemble import build_result
 from ..schema import decode_bio
 from .encoding import DEFAULT_MAX_LENGTH, build_tokenizer, decode_tags, encode
 

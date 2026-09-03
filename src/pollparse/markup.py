@@ -90,7 +90,7 @@ def _strip_markup(line):
     return "".join(text_fragments), spans
 
 
-from .baseline.parser import EXPLICIT_DELIMITERS
+from .delimiters import EXPLICIT_DELIMITERS
 
 
 def _detect_hard_flags(text: str, spans: list[dict]) -> list[str]:

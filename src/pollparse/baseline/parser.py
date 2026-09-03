@@ -1,24 +1,15 @@
 import unicodedata
 
-from .. import lexicon, timeparse
+from .. import timeparse
+from ..assemble import build_result
+from ..delimiters import OPTION_CONJUNCTIONS, OPTION_DELIMITERS
 from ..normalize import normalize
-from ..schema import SETTING_KEYS, encode_bio
 from . import settingscan
 
-__all__ = [
-    "EXPLICIT_DELIMITERS",
-    "OPTION_CONJUNCTIONS",
-    "OPTION_DELIMITERS",
-    "build_result",
-    "parse",
-    "spans_from_rules",
-]
+__all__ = ["parse", "spans_from_rules"]
 
 _TITLE_MARKERS = "?!:"
 
-OPTION_DELIMITERS = "、,，/／;|．\n"
-EXPLICIT_DELIMITERS = "、／/"
-OPTION_CONJUNCTIONS = ("或",)
 _TRIM_CATEGORIES = {"So", "Ps", "Pe", "Cc", "Zs"}
 
 
@@ -43,40 +34,6 @@ def spans_from_rules(text: str) -> list[tuple[int, int, str]]:
     spans.extend((start, end, "OPT") for start, end in option_ranges)
     spans.extend((span["start"], span["end"], span["label"]) for span in settings_spans)
     return sorted(spans)
-
-
-def build_result(text: str, spans: list[tuple[int, int, str]]) -> dict:
-    normalized = normalize(text)
-
-    settings: dict = {}
-    for span_start, span_end, label in spans:
-        if label in ("TITLE", "OPT"):
-            continue
-        surface = normalized[span_start:span_end]
-        if label == "TIME":
-            deadline = timeparse.parse_one(surface)
-            if deadline is not None:
-                settings["deadline"] = deadline
-        else:
-            value = lexicon.lookup(surface, label)
-            if value is not None:
-                settings.update(value)
-
-    return {
-        "text": text,
-        "tags": encode_bio(len(text), spans),
-        "spans": [
-            {"start": s, "end": e, "label": label, "text": text[s:e]}
-            for s, e, label in spans
-        ],
-        "target": {
-            "title": next(
-                (text[s:e] for s, e, label in spans if label == "TITLE"), None
-            ),
-            "options": [text[s:e] for s, e, label in spans if label == "OPT"],
-            "settings": {key: settings.get(key) for key in SETTING_KEYS},
-        },
-    }
 
 
 def parse(text: str) -> dict:
