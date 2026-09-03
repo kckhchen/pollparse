@@ -39,10 +39,10 @@ def _digest(path: Path) -> str:
     return hasher.hexdigest()[:16]
 
 
-def _dataset_facts() -> dict:
+def _dataset_facts(train_path: Path) -> dict:
     stats_path = DIST / "stats.json"
     facts: dict = {"source": str(stats_path.relative_to(ROOT))}
-    train_path = DIST / "train.jsonl"
+    facts["train_file"] = str(train_path)
     if train_path.exists():
         facts["train_sha256"] = _digest(train_path)
         facts["dataset_built_at"] = (
@@ -112,6 +112,16 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--out", default=None)
     parser.add_argument(
+        "--train",
+        default=str(DIST / "train.jsonl"),
+        help="Labelled training corpus (JSONL).",
+    )
+    parser.add_argument(
+        "--dev",
+        default=str(DIST / "dev.jsonl"),
+        help=("Held-out corpus scored after every epoch. Required."),
+    )
+    parser.add_argument(
         "--max-length",
         type=int,
         default=DEFAULT_MAX_LENGTH,
@@ -140,6 +150,11 @@ def main() -> None:
         )
     if out_dir.exists():
         sys.exit(f"{out_dir} already exists — remove it or pass --out")
+
+    for flag, path in (("--train", args.train), ("--dev", args.dev)):
+        if not Path(path).is_file():
+            sys.exit(f"{path} not found (pass {flag} to point elsewhere).\n")
+
     out_dir.mkdir(parents=True)
     print(f"will save to {out_dir}")
 
@@ -158,16 +173,16 @@ def main() -> None:
     pad_token_id = tokenizer.pad_token_id
     assert isinstance(pad_token_id, int), "tokenizer doesn't have pad token"
 
-    def loader_for(split: str, shuffle: bool) -> DataLoader:
+    def loader_for(path: str, shuffle: bool) -> DataLoader:
         return DataLoader(
-            TaggingDataset(DIST / f"{split}.jsonl", tokenizer, args.max_length),
+            TaggingDataset(Path(path), tokenizer, args.max_length),
             batch_size=args.batch_size,
             shuffle=shuffle,
             collate_fn=lambda batch: collate(batch, pad_token_id),
         )
 
-    train_loader = loader_for("train", shuffle=True)
-    dev_loader = loader_for("dev_oov", shuffle=False)
+    train_loader = loader_for(args.train, shuffle=True)
+    dev_loader = loader_for(args.dev, shuffle=False)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
     total_steps = len(train_loader) * args.epochs
@@ -246,7 +261,7 @@ def main() -> None:
             "labels": list(TAGS),
             "params": sum(p.numel() for p in model.parameters()),
         },
-        "data": _dataset_facts(),
+        "data": _dataset_facts(Path(args.train)),
         "metrics": {
             "dev_span_f1": epoch_reports[-1]["dev_span_f1"] if epoch_reports else None,
             "per_epoch": epoch_reports,
