@@ -14,13 +14,29 @@ from pollparse.validate import check_all, coverage_report
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "inputs", nargs="+", help="Markup files (can pass multiple files)"
+        "-i",
+        "--input",
+        nargs="+",
+        required=True,
+        metavar="FILE",
+        help="Markup files to read.",
     )
-    parser.add_argument("output", help="path to output .jsonl")
+    parser.add_argument(
+        "-o",
+        "--output",
+        required=True,
+        metavar="FILE",
+        help="Where to write the JSONL.",
+    )
     args = parser.parse_args()
 
+    output = Path(args.output).resolve()
+    clashes = [path for path in args.input if Path(path).resolve() == output]
+    if clashes:
+        sys.exit(f"--output would overwrite an input file: {clashes[0]}")
+
     examples: list[dict] = []
-    for path in args.inputs:
+    for path in args.input:
         loaded = markup.load_file(path)
         print(f"  {path}: {len(loaded)} entries")
         for example in loaded:
